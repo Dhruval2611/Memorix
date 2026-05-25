@@ -1,0 +1,51 @@
+.glow-card {
+  position: relative;
+  border-radius: var(--r-xl);
+  cursor: default;
+  isolation: isolate;
+}
+
+.glow-card-border {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    500px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    rgba(99, 102, 241, 0.12),
+    transparent 40%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.glow-card:hover .glow-card-border { opacity: 1; }
+
+.glow-card-content {
+  position: relative;
+  z-index: 2;
+  background: var(--bg-surface);
+  border: var(--border);
+  border-radius: inherit;
+  padding: 32px;
+  height: 100%;
+  transition: all var(--t-normal);
+}
+
+.glow-card:hover .glow-card-content {
+  background: var(--bg-hover);
+  border-color: rgba(99, 102, 241, 0.08);
+}
+
+.glow-purple, .glow-blue, .glow-cyan {
+  /* All use same subtle indigo glow for cohesion */
+}
+
+@media (max-width: 768px) {
+  .glow-card-content { padding: 24px; }
+}

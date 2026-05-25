@@ -1,0 +1,76 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: var(--r-full);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: all var(--t-normal);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Sizes */
+.btn-sm { padding: 10px 22px; font-size: 0.68rem; }
+.btn-md { padding: 14px 34px; font-size: 0.72rem; }
+.btn-lg { padding: 16px 42px; font-size: 0.78rem; }
+
+/* Primary — white bg, dark text, minimal */
+.btn-primary {
+  background: #fff;
+  color: #000;
+}
+
+.btn-primary:hover {
+  background: transparent;
+  color: #fff;
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 20px rgba(99, 102, 241, 0.15);
+}
+
+.btn-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+
+.btn-primary:hover .btn-glow { opacity: 1; }
+
+/* Secondary — outlined, glass */
+.btn-secondary {
+  background: transparent;
+  color: var(--w50);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-secondary:hover {
+  color: var(--w85);
+  border-color: rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 0.04);
+}
+
+/* Ghost */
+.btn-ghost {
+  background: transparent;
+  color: var(--w40);
+}
+
+.btn-ghost:hover {
+  color: var(--w70);
+}
+
+/* Icon */
+.btn-icon { display: flex; align-items: center; font-size: 1em; }
+.btn-text { position: relative; z-index: 1; }

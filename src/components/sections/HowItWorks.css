@@ -1,0 +1,66 @@
+.how-it-works {
+  position: relative;
+  overflow: hidden;
+}
+
+.how-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.how-card .glow-card-content {
+  padding: 36px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.how-step-number {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-weight: 400;
+  color: var(--w15);
+  letter-spacing: 0.08em;
+}
+
+.how-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.glow-icon-purple {
+  background: rgba(99, 102, 241, 0.06);
+  color: var(--accent-light);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.glow-icon-blue {
+  background: rgba(96, 165, 250, 0.06);
+  color: rgb(96, 165, 250);
+  border: 1px solid rgba(96, 165, 250, 0.1);
+}
+
+.glow-icon-cyan {
+  background: rgba(34, 211, 238, 0.06);
+  color: rgb(34, 211, 238);
+  border: 1px solid rgba(34, 211, 238, 0.1);
+}
+
+.how-card h3 { font-size: 1rem; color: var(--w85); }
+.how-card p { font-size: 0.78rem; color: var(--w30); line-height: 1.7; }
+
+@media (max-width: 768px) {
+  .how-cards { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; }
+}

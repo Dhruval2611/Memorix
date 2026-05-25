@@ -1,0 +1,18 @@
+.memory-system { position: relative; overflow: hidden; }
+
+.memory-timeline { display: flex; flex-direction: column; max-width: 560px; margin: 0 auto 64px; }
+.memory-node { display: flex; gap: 20px; align-items: flex-start; }
+.node-indicator { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 4px; }
+.node-dot { width: 10px; height: 10px; border-radius: 50%; z-index: 1; }
+.node-line { width: 1px; height: 44px; background: linear-gradient(to bottom, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); }
+.node-content { padding-bottom: 28px; }
+.node-number { font-family: var(--font-mono); font-size: 0.45rem; font-weight: 400; letter-spacing: 0.1em; margin-bottom: 4px; }
+.node-content h3 { font-size: 1rem; color: var(--w85); margin-bottom: 4px; }
+.node-content p { font-size: 0.75rem; color: var(--w30); }
+
+.memory-principles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.principle-card { padding: 24px; }
+.principle-card h4 { font-size: 0.85rem; color: var(--w70); margin-bottom: 8px; }
+.principle-card p { font-size: 0.75rem; color: var(--w30); line-height: 1.65; }
+
+@media (max-width: 768px) { .memory-principles { grid-template-columns: 1fr; } }
