@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, XCircle, Clock, BarChart3, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle2, XCircle, RotateCcw, BarChart3, Info } from 'lucide-react';
 import Button from '../ui/Button';
+import CustomSelect from '../ui/CustomSelect';
 import { getContentLibrary, getLearningState, updateUserStats, addSessionRecord } from '../../utils/storage';
 import { generateTestSet } from '../../utils/adaptiveEngine';
 import './TestMode.css';
@@ -18,6 +19,8 @@ export default function TestMode() {
   const [feedback, setFeedback] = useState(null);
   const [results, setResults] = useState([]);
   const [library, setLibrary] = useState([]);
+  const [directionSetting, setDirectionSetting] = useState('term-to-def');
+  const [testDirections, setTestDirections] = useState([]);
 
   useEffect(() => {
     setLibrary(getContentLibrary());
@@ -28,7 +31,13 @@ export default function TestMode() {
     if (!content) return;
 
     const testItems = generateTestSet(content.items, questionCount);
+    
+    const directions = testItems.map(() => {
+      return directionSetting === 'random' ? (Math.random() > 0.5 ? 'term-to-def' : 'def-to-term') : directionSetting;
+    });
+
     setQuestions(testItems);
+    setTestDirections(directions);
     setCurrentQ(0);
     setResults([]);
     setStage('test');
@@ -38,15 +47,20 @@ export default function TestMode() {
     if (!userAnswer.trim()) return;
 
     const current = questions[currentQ];
-    const userWords = userAnswer.toLowerCase().trim().split(/\s+/).filter(w => w.length > 2);
-    const defWords = current.definition.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    const matchCount = userWords.filter(w => defWords.some(d => d.includes(w) || w.includes(d))).length;
-    const isCorrect = matchCount >= Math.min(2, Math.ceil(defWords.length * 0.4));
+    const currentDirection = testDirections[currentQ];
+    const normalizeString = (str) => str.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").replace(/\s+/g, ' ').trim();
+    const normalizedUser = normalizeString(userAnswer);
+    const expectedAnswer = current.type === 'fill-blank' 
+      ? current.term 
+      : (currentDirection === 'term-to-def' ? current.definition : current.term);
+    const normalizedExpected = normalizeString(expectedAnswer);
+    const isCorrect = normalizedUser === normalizedExpected;
 
     const result = {
       item: current,
       userAnswer: userAnswer.trim(),
       isCorrect,
+      direction: currentDirection
     };
 
     setFeedback(isCorrect ? 'correct' : 'wrong');
@@ -61,7 +75,7 @@ export default function TestMode() {
         setCurrentQ(prev => prev + 1);
       }
     }, 1500);
-  }, [userAnswer, questions, currentQ, results]);
+  }, [userAnswer, questions, currentQ, results, testDirections]);
 
   const finishTest = (finalResults) => {
     const correct = finalResults.filter(r => r.isCorrect).length;
@@ -127,18 +141,45 @@ export default function TestMode() {
                 <>
                   <div className="setup-field">
                     <label>Select Content</label>
-                    <select
+                    <CustomSelect
                       value={contentId}
-                      onChange={(e) => setContentId(e.target.value)}
-                      className="setup-select"
-                    >
-                      <option value="">Choose content...</option>
-                      {library.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.title} ({c.itemCount} items)
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setContentId(val)}
+                      options={library.map(c => ({
+                        value: c.id,
+                        label: `${c.title} (${c.itemCount} items)`
+                      }))}
+                      placeholder="Choose content..."
+                    />
+                  </div>
+
+                  <div className="setup-field">
+                    <label>Test Direction</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="setup-select has-tooltip"
+                        style={{ flex: 1, padding: '10px', background: directionSetting === 'term-to-def' ? 'var(--accent-dim)' : 'var(--bg-hover)', color: directionSetting === 'term-to-def' ? 'var(--w85)' : 'var(--w50)', border: directionSetting === 'term-to-def' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onClick={() => setDirectionSetting('term-to-def')}
+                      >
+                        Term → Def
+                        <div className="custom-tooltip">Show Term, Answer Definition</div>
+                      </button>
+                      <button
+                        className="setup-select has-tooltip"
+                        style={{ flex: 1, padding: '10px', background: directionSetting === 'def-to-term' ? 'var(--accent-dim)' : 'var(--bg-hover)', color: directionSetting === 'def-to-term' ? 'var(--w85)' : 'var(--w50)', border: directionSetting === 'def-to-term' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onClick={() => setDirectionSetting('def-to-term')}
+                      >
+                        Def → Term
+                        <div className="custom-tooltip">Show Definition, Answer Term</div>
+                      </button>
+                      <button
+                        className="setup-select has-tooltip"
+                        style={{ flex: 1, padding: '10px', background: directionSetting === 'random' ? 'var(--accent-dim)' : 'var(--bg-hover)', color: directionSetting === 'random' ? 'var(--w85)' : 'var(--w50)', border: directionSetting === 'random' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onClick={() => setDirectionSetting('random')}
+                      >
+                        Mixed
+                        <div className="custom-tooltip">Randomly switch directions</div>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="setup-field">
@@ -205,8 +246,18 @@ export default function TestMode() {
                   transition={{ duration: 0.3 }}
                 >
                   <span className="question-type-badge">{questions[currentQ].type}</span>
-                  <div className="question-term">{questions[currentQ].term}</div>
-                  <p className="question-prompt">What does this mean?</p>
+                  <div className="question-term">
+                    {questions[currentQ].type === 'fill-blank' ? questions[currentQ].term : (testDirections[currentQ] === 'term-to-def' ? questions[currentQ].term : questions[currentQ].definition)}
+                  </div>
+                  <p className="question-prompt">
+                    {questions[currentQ].type === 'fill-blank'
+                      ? 'Fill in the blank:'
+                      : (testDirections[currentQ] === 'term-to-def' ? 'What does this mean?' : 'What is the term?')}
+                  </p>
+
+                  {questions[currentQ].type === 'fill-blank' && (
+                    <div className="fill-blank-context" style={{ padding: '12px 16px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.04)', borderRadius: 'var(--r-md)', fontSize: '0.85rem', color: 'var(--w40)', width: '100%', lineHeight: '1.6', marginBottom: '16px' }}>{questions[currentQ].definition}</div>
+                  )}
 
                   <div className={`test-input-wrap ${feedback || ''}`}>
                     <input
@@ -240,7 +291,11 @@ export default function TestMode() {
                             <XCircle size={18} />
                             <div>
                               <span>Correct answer: </span>
-                              <strong>{questions[currentQ].definition}</strong>
+                              <strong>
+                                {questions[currentQ].type === 'fill-blank'
+                                  ? questions[currentQ].term
+                                  : (testDirections[currentQ] === 'term-to-def' ? questions[currentQ].definition : questions[currentQ].term)}
+                              </strong>
                             </div>
                           </>
                         )}
@@ -318,9 +373,11 @@ export default function TestMode() {
                   <div className="wrong-list">
                     {results.filter(r => !r.isCorrect).map((r, i) => (
                       <div key={i} className="wrong-item glass">
-                        <div className="wrong-term">{r.item.term}</div>
+                        <div className="wrong-term">
+                          {r.item.type === 'fill-blank' ? r.item.term : (r.direction === 'term-to-def' ? r.item.term : r.item.definition)}
+                        </div>
                         <div className="wrong-your-answer">You said: {r.userAnswer}</div>
-                        <div className="wrong-correct-answer">Correct: {r.item.definition}</div>
+                        <div className="wrong-correct-answer">Correct: {r.item.type === 'fill-blank' ? r.item.term : (r.direction === 'term-to-def' ? r.item.definition : r.item.term)}</div>
                       </div>
                     ))}
                   </div>

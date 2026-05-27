@@ -6,8 +6,8 @@
 :root {
   /* Pure Black */
   --bg: #000;
-  --bg-surface: rgba(255, 255, 255, 0.015);
-  --bg-hover: rgba(255, 255, 255, 0.025);
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --bg-hover: rgba(255, 255, 255, 0.05);
   --bg-terminal: rgba(10, 10, 18, 0.9);
 
   /* Accent — Indigo */
@@ -35,9 +35,9 @@
   --w04: rgba(255, 255, 255, 0.04);
 
   /* Borders */
-  --border: 1px solid rgba(255, 255, 255, 0.04);
-  --border-hover: 1px solid rgba(99, 102, 241, 0.15);
-  --border-subtle: 1px solid rgba(255, 255, 255, 0.06);
+  --border: 1px solid rgba(255, 255, 255, 0.08);
+  --border-hover: 1px solid rgba(99, 102, 241, 0.25);
+  --border-subtle: 1px solid rgba(255, 255, 255, 0.1);
 
   /* Typography */
   --font-heading: 'Syne', sans-serif;
@@ -61,6 +61,38 @@
   --t-normal: 0.5s var(--ease);
   --t-slow: 0.9s var(--ease);
 }
+
+/* Grey Theme */
+[data-theme="grey"] {
+  --bg: #1e1e24;
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-terminal: rgba(20, 20, 26, 0.9);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg-surface: rgba(0, 0, 0, 0.03);
+  --bg-hover: rgba(0, 0, 0, 0.05);
+  --bg-terminal: rgba(240, 240, 245, 0.9);
+  
+  /* Re-mapping white opacities to black for light theme */
+  --w85: rgba(15, 23, 42, 0.85);
+  --w70: rgba(15, 23, 42, 0.7);
+  --w50: rgba(15, 23, 42, 0.5);
+  --w40: rgba(15, 23, 42, 0.4);
+  --w30: rgba(15, 23, 42, 0.3);
+  --w20: rgba(15, 23, 42, 0.2);
+  --w15: rgba(15, 23, 42, 0.15);
+  --w08: rgba(15, 23, 42, 0.08);
+  --w04: rgba(15, 23, 42, 0.04);
+  
+  --border: 1px solid rgba(0, 0, 0, 0.06);
+  --border-hover: 1px solid rgba(99, 102, 241, 0.2);
+  --border-subtle: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 
 /* === Reset === */
 *, *::before, *::after {
@@ -278,7 +310,7 @@ a {
 /* === Responsive === */
 @media (max-width: 768px) {
   .hide-mobile { display: none !important; }
-  .section { padding: clamp(60px, 10vw, 100px) 0; }
+  .section { padding: clamp(40px, 6vw, 70px) 0; }
 }
 @media (min-width: 769px) {
   .hide-desktop { display: none !important; }

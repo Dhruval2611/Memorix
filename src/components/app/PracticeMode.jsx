@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, XCircle, Brain, Zap, TrendingUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, Brain, Zap, TrendingUp, Info } from 'lucide-react';
 import Button from '../ui/Button';
+import CustomSelect from '../ui/CustomSelect';
 import {
   getContentLibrary,
   getLearningStateForContent,
@@ -30,6 +31,8 @@ export default function PracticeMode() {
   const [feedback, setFeedback] = useState(null);
   const [sessionStats, setSessionStats] = useState({ correct: 0, wrong: 0, total: 0 });
   const [recentIds, setRecentIds] = useState([]);
+  const [directionSetting, setDirectionSetting] = useState('term-to-def'); // 'term-to-def', 'def-to-term', 'random'
+  const [currentDirection, setCurrentDirection] = useState('term-to-def');
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -52,16 +55,21 @@ export default function PracticeMode() {
 
     const firstItem = selectNextItem(content.items, state, []);
     setCurrentItem(firstItem);
+    setCurrentDirection(directionSetting === 'random' ? (Math.random() > 0.5 ? 'term-to-def' : 'def-to-term') : directionSetting);
     setStage('practice');
   };
 
   const checkAnswer = useCallback(() => {
     if (!userAnswer.trim() || !currentItem) return;
 
-    const userWords = userAnswer.toLowerCase().trim().split(/\s+/).filter(w => w.length > 2);
-    const defWords = currentItem.definition.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    const matchCount = userWords.filter(w => defWords.some(d => d.includes(w) || w.includes(d))).length;
-    const isCorrect = matchCount >= Math.min(2, Math.ceil(defWords.length * 0.4));
+    const normalizeString = (str) => str.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").replace(/\s+/g, ' ').trim();
+    const normalizedUser = normalizeString(userAnswer);
+    const isTermToDef = currentDirection === 'term-to-def';
+    const expectedAnswer = currentItem.type === 'fill-blank' 
+      ? currentItem.term 
+      : (isTermToDef ? currentItem.definition : currentItem.term);
+    const normalizedExpected = normalizeString(expectedAnswer);
+    const isCorrect = normalizedUser === normalizedExpected;
 
     // Update learning state
     const newState = updateItemState(learningState, currentItem.id, isCorrect);
@@ -84,11 +92,12 @@ export default function PracticeMode() {
       setRecentIds(newRecent);
       const next = selectNextItem(items, newState, newRecent);
       setCurrentItem(next);
+      setCurrentDirection(directionSetting === 'random' ? (Math.random() > 0.5 ? 'term-to-def' : 'def-to-term') : directionSetting);
 
       // Focus input
       inputRef.current?.focus();
     }, 2000);
-  }, [userAnswer, currentItem, learningState, contentId, items, recentIds]);
+  }, [userAnswer, currentItem, learningState, contentId, items, recentIds, currentDirection, directionSetting]);
 
   const endSession = () => {
     updateUserStats({
@@ -153,18 +162,45 @@ export default function PracticeMode() {
                 <>
                   <div className="setup-field">
                     <label>Select Content</label>
-                    <select
+                    <CustomSelect
                       value={contentId}
-                      onChange={(e) => setContentId(e.target.value)}
-                      className="setup-select"
-                    >
-                      <option value="">Choose content...</option>
-                      {library.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.title} ({c.itemCount} items)
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setContentId(val)}
+                      options={library.map(c => ({
+                        value: c.id,
+                        label: `${c.title} (${c.itemCount} items)`
+                      }))}
+                      placeholder="Choose content..."
+                    />
+                  </div>
+
+                  <div className="setup-field" style={{ marginTop: '16px' }}>
+                    <label>Practice Direction</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="setup-select has-tooltip"
+                        style={{ flex: 1, padding: '10px', background: directionSetting === 'term-to-def' ? 'var(--accent-dim)' : 'var(--bg-hover)', color: directionSetting === 'term-to-def' ? 'var(--w85)' : 'var(--w50)', border: directionSetting === 'term-to-def' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onClick={() => setDirectionSetting('term-to-def')}
+                      >
+                        Term → Def
+                        <div className="custom-tooltip">Show Term, Answer Definition</div>
+                      </button>
+                      <button
+                        className="setup-select has-tooltip"
+                        style={{ flex: 1, padding: '10px', background: directionSetting === 'def-to-term' ? 'var(--accent-dim)' : 'var(--bg-hover)', color: directionSetting === 'def-to-term' ? 'var(--w85)' : 'var(--w50)', border: directionSetting === 'def-to-term' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onClick={() => setDirectionSetting('def-to-term')}
+                      >
+                        Def → Term
+                        <div className="custom-tooltip">Show Definition, Answer Term</div>
+                      </button>
+                      <button
+                        className="setup-select has-tooltip"
+                        style={{ flex: 1, padding: '10px', background: directionSetting === 'random' ? 'var(--accent-dim)' : 'var(--bg-hover)', color: directionSetting === 'random' ? 'var(--w85)' : 'var(--w50)', border: directionSetting === 'random' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onClick={() => setDirectionSetting('random')}
+                      >
+                        Mixed
+                        <div className="custom-tooltip">Randomly switch directions</div>
+                      </button>
+                    </div>
                   </div>
 
                   <Button
@@ -240,11 +276,13 @@ export default function PracticeMode() {
                   </div>
 
                   <span className="question-type-badge">{currentItem.type}</span>
-                  <div className="practice-term">{currentItem.term}</div>
+                  <div className="practice-term">
+                    {currentItem.type === 'fill-blank' ? currentItem.term : (currentDirection === 'term-to-def' ? currentItem.term : currentItem.definition)}
+                  </div>
                   <p className="practice-prompt">
                     {currentItem.type === 'fill-blank'
                       ? 'Fill in the blank:'
-                      : 'What does this mean?'}
+                      : (currentDirection === 'term-to-def' ? 'What does this mean?' : 'What is the term?')}
                   </p>
 
                   {currentItem.type === 'fill-blank' && (
@@ -287,7 +325,7 @@ export default function PracticeMode() {
                               <strong>
                                 {currentItem.type === 'fill-blank'
                                   ? currentItem.term
-                                  : currentItem.definition}
+                                  : (currentDirection === 'term-to-def' ? currentItem.definition : currentItem.term)}
                               </strong>
                               <span className="requeue-notice">This will appear again soon.</span>
                             </div>

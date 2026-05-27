@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Target, Brain, Flame, TrendingUp, Trash2, Clock, Upload, Plus } from 'lucide-react';
+import { BookOpen, Target, Brain, Flame, TrendingUp, Trash2, Clock, Upload, Plus, Edit3 } from 'lucide-react';
 import Button from '../ui/Button';
 import GlowCard from '../ui/GlowCard';
 import ScrollReveal, { ScrollRevealItem } from '../animations/ScrollReveal';
@@ -127,6 +127,11 @@ export default function Dashboard() {
             <h3>Upload</h3>
             <p>Add new content</p>
           </GlowCard>
+          <GlowCard glowColor="green" className="action-card" onClick={() => navigate('/read')}>
+            <Edit3 size={24} />
+            <h3>Study & Edit</h3>
+            <p>Manage your sets</p>
+          </GlowCard>
         </motion.div>
 
         {/* Content Library */}
@@ -187,6 +192,9 @@ export default function Dashboard() {
                       </button>
                       <button className="lib-action-btn" onClick={() => navigate('/test')}>
                         <Target size={14} /> Test
+                      </button>
+                      <button className="lib-action-btn" onClick={() => navigate('/read', { state: { contentId: content.id } })}>
+                        <Edit3 size={14} /> Study
                       </button>
                     </div>
                   </div>

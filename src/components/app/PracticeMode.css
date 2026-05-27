@@ -250,6 +250,65 @@
   font-weight: 800;
 }
 
+/* Custom Tooltips */
+.has-tooltip {
+  position: relative;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.info-icon-wrap {
+  color: var(--w40);
+  display: flex;
+  align-items: center;
+}
+
+.has-tooltip:hover .info-icon-wrap {
+  color: var(--w85);
+}
+
+.custom-tooltip {
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--bg-terminal);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--w85);
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-weight: normal;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  z-index: 10;
+}
+
+.custom-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--bg-terminal) transparent transparent transparent;
+}
+
+.has-tooltip:hover .custom-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
 .summary-label {
   font-family: var(--font-mono);
   font-size: 0.45rem;

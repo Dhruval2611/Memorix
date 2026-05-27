@@ -61,4 +61,22 @@
 .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.04); }
 .dot.filled { background: var(--cyan); box-shadow: 0 0 6px rgba(34,211,238,0.3); }
 
-@media (max-width: 768px) { .modes-grid { grid-template-columns: 1fr; } }
+@media (max-width: 750px) {
+  .modes-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    gap: 16px;
+    margin: 0 -20px;
+    padding: 0 20px 20px 20px;
+  }
+  .modes-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .mode-card {
+    flex: 0 0 85%;
+    max-width: 320px;
+    scroll-snap-align: center;
+  }
+}

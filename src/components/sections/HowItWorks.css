@@ -61,6 +61,22 @@
 .how-card h3 { font-size: 1rem; color: var(--w85); }
 .how-card p { font-size: 0.78rem; color: var(--w30); line-height: 1.7; }
 
-@media (max-width: 768px) {
-  .how-cards { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; }
+@media (max-width: 750px) {
+  .how-cards { 
+    display: flex; 
+    overflow-x: auto; 
+    scroll-snap-type: x mandatory; 
+    scroll-behavior: smooth; 
+    gap: 16px;
+    margin: 0 -20px;
+    padding: 0 20px 20px 20px;
+  }
+  .how-cards::-webkit-scrollbar {
+    display: none;
+  }
+  .how-card {
+    flex: 0 0 85%;
+    max-width: 320px;
+    scroll-snap-align: center;
+  }
 }

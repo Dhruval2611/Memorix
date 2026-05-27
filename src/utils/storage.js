@@ -7,11 +7,22 @@ const STORAGE_KEYS = {
   LEARNING_STATE: 'memorix_learning_state',
   USER_STATS: 'memorix_user_stats',
   SESSION_HISTORY: 'memorix_session_history',
+  USERS: 'memorix_users_auth_v2',
 };
+
+export function getCurrentUser() {
+  return localStorage.getItem('memorix_current_user') || 'guest';
+}
+
+function getPrefixedKey(key) {
+  if (key === STORAGE_KEYS.USERS) return key; // Global key, not prefixed by user
+  const user = getCurrentUser();
+  return `${user}_${key}`;
+}
 
 export function saveToStorage(key, data) {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    localStorage.setItem(getPrefixedKey(key), JSON.stringify(data));
     return true;
   } catch (e) {
     console.error('Storage save error:', e);
@@ -21,7 +32,7 @@ export function saveToStorage(key, data) {
 
 export function loadFromStorage(key, fallback = null) {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(getPrefixedKey(key));
     return raw ? JSON.parse(raw) : fallback;
   } catch (e) {
     console.error('Storage load error:', e);
@@ -30,7 +41,7 @@ export function loadFromStorage(key, fallback = null) {
 }
 
 export function removeFromStorage(key) {
-  localStorage.removeItem(key);
+  localStorage.removeItem(getPrefixedKey(key));
 }
 
 // Content Library
@@ -61,6 +72,21 @@ export function deleteContentItem(id) {
   const state = getLearningState();
   delete state[id];
   saveLearningState(state);
+}
+
+export function updateContentItem(id, updatedSet) {
+  const library = getContentLibrary();
+  const index = library.findIndex(item => item.id === id);
+  if (index !== -1) {
+    library[index] = { 
+      ...library[index], 
+      ...updatedSet, 
+      itemCount: updatedSet.items ? updatedSet.items.length : library[index].itemCount 
+    };
+    saveContentLibrary(library);
+    return library[index];
+  }
+  return null;
 }
 
 // Learning State
@@ -132,6 +158,40 @@ export function addSessionRecord(record) {
   // Keep last 50 sessions
   if (history.length > 50) history.pop();
   saveToStorage(STORAGE_KEYS.SESSION_HISTORY, history);
+}
+
+// Authentication / Users
+export function getAllUsers() {
+  return loadFromStorage(STORAGE_KEYS.USERS, []);
+}
+
+export function registerUser(username, password, email) {
+  const users = getAllUsers();
+  if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) return false; // Already exists
+  users.push({ username, password, email });
+  saveToStorage(STORAGE_KEYS.USERS, users);
+  return true;
+}
+
+export function verifyLogin(username, password) {
+  const users = getAllUsers();
+  return users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+}
+
+export function getUserByEmail(email) {
+  const users = getAllUsers();
+  return users.find(u => u.email === email);
+}
+
+export function resetPassword(username, newPassword) {
+  const users = getAllUsers();
+  const index = users.findIndex(u => u.username.toLowerCase() === username.toLowerCase());
+  if (index !== -1) {
+    users[index].password = newPassword;
+    saveToStorage(STORAGE_KEYS.USERS, users);
+    return true;
+  }
+  return false;
 }
 
 export { STORAGE_KEYS };

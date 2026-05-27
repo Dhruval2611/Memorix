@@ -17,8 +17,12 @@
 }
 
 .btn:disabled {
-  opacity: 0.3;
+  opacity: 0.5;
   cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--w40) !important;
 }
 
 /* Sizes */
@@ -26,33 +30,34 @@
 .btn-md { padding: 14px 34px; font-size: 0.72rem; }
 .btn-lg { padding: 16px 42px; font-size: 0.78rem; }
 
-/* Primary — white bg, dark text, minimal */
+/* Primary — glowing accent outline */
 .btn-primary {
-  background: #fff;
-  color: #000;
+  background: transparent;
+  color: var(--w85);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
 }
 
-.btn-primary:hover {
-  background: transparent;
-  color: #fff;
-  box-shadow: 0 0 0 1px var(--accent), 0 4px 20px rgba(99, 102, 241, 0.15);
+.btn-primary:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
 }
 
 .btn-glow {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  background: linear-gradient(135deg, rgba(99,102,241,0.2) 0%, transparent 50%);
   opacity: 0;
   transition: opacity var(--t-fast);
 }
 
-.btn-primary:hover .btn-glow { opacity: 1; }
+.btn-primary:hover:not(:disabled) .btn-glow { opacity: 1; }
 
 /* Secondary — outlined, glass */
 .btn-secondary {
   background: transparent;
   color: var(--w50);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: var(--border);
 }
 
 .btn-secondary:hover {

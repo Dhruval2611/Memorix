@@ -14,36 +14,19 @@ export function parseTextContent(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
   for (const line of lines) {
-    // Pattern 1: "term - definition" or "term — definition"
-    const dashMatch = line.match(/^(.+?)\s*[-–—]\s+(.+)$/);
-    if (dashMatch && dashMatch[1].split(' ').length <= 6) {
-      items.push({
-        term: dashMatch[1].trim(),
-        definition: dashMatch[2].trim(),
-        type: 'definition',
-      });
-      continue;
-    }
+    // Pattern 1: General Language Pair (handles : - = -> => →)
+    const pairMatch = line.match(/^\s*(.+?)\s*(?::|-|=|->|=>|→)\s*(.+?)\s*$/);
+    if (pairMatch) {
+      let term = pairMatch[1].trim();
+      let definition = pairMatch[2].trim();
 
-    // Pattern 2: "term = definition"
-    const eqMatch = line.match(/^(.+?)\s*=\s+(.+)$/);
-    if (eqMatch && eqMatch[1].split(' ').length <= 6) {
-      items.push({
-        term: eqMatch[1].trim(),
-        definition: eqMatch[2].trim(),
+      const item = {
+        term,
+        definition,
         type: 'definition',
-      });
-      continue;
-    }
+      };
 
-    // Pattern 3: "term: definition"
-    const colonMatch = line.match(/^(.+?)\s*:\s+(.{10,})$/);
-    if (colonMatch && colonMatch[1].split(' ').length <= 5) {
-      items.push({
-        term: colonMatch[1].trim(),
-        definition: colonMatch[2].trim(),
-        type: 'definition',
-      });
+      items.push(item);
       continue;
     }
 

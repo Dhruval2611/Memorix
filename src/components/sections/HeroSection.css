@@ -175,8 +175,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .hero { min-height: 85vh; padding-top: 100px; }
+  
   .hero-name {
-    font-size: clamp(3rem, 16vw, 5rem);
+    font-size: clamp(2rem, 12vw, 4rem);
   }
 
   .hero-ctas {
