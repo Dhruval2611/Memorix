@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import MobileBottomNav from './components/layout/MobileBottomNav';
 
 // Landing page sections
 import HeroSection from './components/sections/HeroSection';
@@ -87,6 +88,7 @@ export default function App() {
         <Navbar theme={theme} setTheme={setTheme} user={user} setUser={setUser} />
         <AppRoutes user={user} setUser={setUser} />
       </div>
+      <MobileBottomNav />
     </Router>
   );
 }

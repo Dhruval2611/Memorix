@@ -14,7 +14,6 @@ const navLinks = [
 
 export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -25,9 +24,7 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location]);
+
 
   return (
     <>
@@ -71,93 +68,30 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
 
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--w50)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
-                  <User size={14} /> {user}
+                <div className="navbar-user-info" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--w50)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
+                  <User size={14} /> <span className="hide-mobile">{user}</span>
                 </div>
                 <button
-                  className="navbar-cta hide-mobile"
+                  className="navbar-cta"
                   onClick={() => setShowLogoutConfirm(true)}
-                  style={{ background: 'transparent', color: 'var(--w50)', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px' }}
+                  style={{ background: 'transparent', color: 'var(--w50)', border: '1px solid var(--border-subtle)', padding: '6px 12px' }}
                 >
-                  <LogOut size={14} style={{ marginRight: '6px', display: 'inline' }} />
-                  Logout
+                  <LogOut size={14} className="hide-mobile" style={{ marginRight: '6px', display: 'inline' }} />
+                  <span className="hide-mobile">Logout</span>
+                  <LogOut size={16} className="hide-desktop" />
                 </button>
               </div>
             ) : (
               <button
-                className="navbar-cta hide-mobile"
+                className="navbar-cta"
                 onClick={() => navigate('/login')}
               >
                 Log In
               </button>
             )}
-
-            <button
-              className="navbar-hamburger hide-desktop"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
           </div>
         </div>
       </motion.nav>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            className="mobile-menu"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="mobile-menu-inner">
-              {navLinks.map((link, i) => (
-                <motion.div
-                  key={link.path}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <Link
-                    to={link.path}
-                    className={`mobile-link ${location.pathname === link.path ? 'active' : ''}`}
-                  >
-                    {link.label}
-                  </Link>
-                </motion.div>
-              ))}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                {user ? (
-                  <button
-                    className="mobile-cta"
-                    onClick={() => {
-                      setMobileOpen(false);
-                      setShowLogoutConfirm(true);
-                    }}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--w70)' }}
-                  >
-                    <LogOut size={16} /> Logout ({user})
-                  </button>
-                ) : (
-                  <button
-                    className="mobile-cta"
-                    onClick={() => { navigate('/login'); setMobileOpen(false); }}
-                  >
-                    Log In
-                  </button>
-                )}
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Logout Confirmation Modal */}
       <AnimatePresence>
@@ -184,9 +118,7 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                 <button 
                   onClick={() => setShowLogoutConfirm(false)}
-                  style={{ padding: '10px 20px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--w70)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', flex: 1, transition: 'all 0.2s', fontFamily: 'var(--font-body)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--w85)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--w70)'; }}
+                  style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--bg-hover)', color: 'var(--w70)', border: '1px solid var(--border-subtle)', cursor: 'pointer', flex: 1, transition: 'all 0.2s', fontFamily: 'var(--font-body)' }}
                 >
                   Cancel
                 </button>

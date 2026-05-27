@@ -74,7 +74,7 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .input-group {
@@ -93,15 +93,16 @@
 
 .input-group input {
   width: 100%;
-  padding: 14px 16px;
-  background: rgba(0,0,0,0.1);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: var(--r-md);
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
   color: var(--w85);
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 0.95rem;
   outline: none;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .input-group input:focus {
@@ -138,14 +139,13 @@
 
 .phone-prefix {
   position: absolute;
-  left: 16px;
-  color: var(--w50);
-  font-family: var(--font-body);
-  font-size: 1rem;
+  left: 14px;
+  color: var(--w40);
+  font-size: 0.95rem;
 }
 
 .phone-input-wrap input {
-  padding-left: 56px;
+  padding-left: 48px;
 }
 
 .forgot-link {

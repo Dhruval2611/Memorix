@@ -288,7 +288,7 @@ export default function ReadMode() {
                       setSearchQuery(e.target.value);
                       setCurrentCardIndex(0);
                     }}
-                    style={{ width: '100%', padding: '12px 16px 12px 44px', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--w85)', fontSize: '1rem', outline: 'none' }}
+                    style={{ width: '100%', padding: '10px 14px 10px 40px', background: 'var(--bg-hover)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--r-sm)', color: 'var(--w85)', fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
 
@@ -408,20 +408,20 @@ export default function ReadMode() {
                     <button
                       className={`upload-tab ${bulkMode === 'text' ? 'active' : ''}`}
                       onClick={() => setBulkMode('text')}
-                      style={{ flex: 1, padding: '12px', background: bulkMode === 'text' ? 'var(--accent-dim)' : 'transparent', border: bulkMode === 'text' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: '8px', color: 'var(--w85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}
+                      style={{ flex: 1, padding: '10px', background: bulkMode === 'text' ? 'var(--accent-dim)' : 'transparent', border: bulkMode === 'text' ? '1px solid var(--accent)' : '1px solid var(--border-subtle)', borderRadius: 'var(--r-sm)', color: 'var(--w85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', boxSizing: 'border-box' }}
                     >
                       <Type size={16} /> Text Input
                     </button>
                     <button
                       className={`upload-tab ${bulkMode === 'pdf' ? 'active' : ''}`}
                       onClick={() => setBulkMode('pdf')}
-                      style={{ flex: 1, padding: '12px', background: bulkMode === 'pdf' ? 'var(--accent-dim)' : 'transparent', border: bulkMode === 'pdf' ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: '8px', color: 'var(--w85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}
+                      style={{ flex: 1, padding: '10px', background: bulkMode === 'pdf' ? 'var(--accent-dim)' : 'transparent', border: bulkMode === 'pdf' ? '1px solid var(--accent)' : '1px solid var(--border-subtle)', borderRadius: 'var(--r-sm)', color: 'var(--w85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', boxSizing: 'border-box' }}
                     >
                       <FileText size={16} /> PDF Upload
                     </button>
                   </div>
 
-                  <div className="upload-workspace" style={{ background: 'var(--bg-hover)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                  <div className="upload-workspace" style={{ background: 'var(--bg-hover)', padding: '20px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', boxSizing: 'border-box' }}>
                     {bulkMode === 'text' && (
                       <div className="text-input-area">
                         <textarea
@@ -429,7 +429,7 @@ export default function ReadMode() {
                           placeholder="Enter your learning content here...&#10;&#10;Supported formats:&#10;• term - definition&#10;• term: definition&#10;• Q: question / A: answer"
                           value={bulkText}
                           onChange={(e) => setBulkText(e.target.value)}
-                          style={{ width: '100%', minHeight: '200px', background: 'transparent', border: 'none', color: 'var(--w85)', fontSize: '1rem', resize: 'vertical', outline: 'none' }}
+                          style={{ width: '100%', minHeight: '160px', background: 'transparent', border: 'none', color: 'var(--w85)', fontSize: '0.95rem', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
                         />
                       </div>
                     )}

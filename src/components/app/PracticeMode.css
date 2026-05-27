@@ -79,7 +79,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-hover);
   transition: all 0.3s ease;
 }
 
@@ -102,13 +102,14 @@
 
 .fill-blank-context {
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
   font-size: 0.85rem;
   color: var(--w40);
   width: 100%;
   line-height: 1.6;
+  box-sizing: border-box;
 }
 
 .practice-input-wrap {
@@ -128,19 +129,20 @@
 
 .practice-input {
   width: 100%;
-  padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--r-md);
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm);
   color: var(--w85);
   font-family: var(--font-body);
   font-size: 0.95rem;
   text-align: center;
   outline: none;
   transition: all var(--t-fast);
+  box-sizing: border-box;
 }
 
-.practice-input:focus { border-color: rgba(99, 102, 241, 0.2); }
+.practice-input:focus { border-color: var(--accent); }
 .practice-input::placeholder { color: var(--w15); }
 
 /* Feedback */

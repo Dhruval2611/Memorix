@@ -311,6 +311,7 @@ a {
 @media (max-width: 768px) {
   .hide-mobile { display: none !important; }
   .section { padding: clamp(40px, 6vw, 70px) 0; }
+  .page-content { padding-bottom: 80px; }
 }
 @media (min-width: 769px) {
   .hide-desktop { display: none !important; }
