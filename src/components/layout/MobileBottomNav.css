@@ -4,9 +4,7 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  background: var(--bg-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg);
   border-top: 1px solid var(--border-subtle);
   z-index: 9998;
   padding-bottom: env(safe-area-inset-bottom);

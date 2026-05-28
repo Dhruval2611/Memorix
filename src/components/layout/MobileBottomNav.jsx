@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, BookOpen, Dumbbell, FileText, LayoutDashboard } from 'lucide-react';
+import { Home, BookOpen, Brain, GraduationCap, LayoutDashboard } from 'lucide-react';
 import './MobileBottomNav.css';
 
 const navItems = [
   { label: 'Home', path: '/', icon: Home },
   { label: 'Study', path: '/read', icon: BookOpen },
-  { label: 'Practice', path: '/practice', icon: Dumbbell },
-  { label: 'Test', path: '/test', icon: FileText },
+  { label: 'Practice', path: '/practice', icon: Brain },
+  { label: 'Test', path: '/test', icon: GraduationCap },
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
 ];
 

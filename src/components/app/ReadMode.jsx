@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Edit2, Check, X, Plus, Trash2, Save, BookOpen, List, Grid, CreditCard, ChevronLeft, ChevronRight, Type, FileText, Search } from 'lucide-react';
+import { ArrowLeft, Edit2, Check, X, Plus, Trash2, Save, BookOpen, List, Grid, CreditCard, ChevronLeft, ChevronRight, Type, FileText, Search, MoreHorizontal } from 'lucide-react';
 import Button from '../ui/Button';
 import CustomSelect from '../ui/CustomSelect';
-import { getContentLibrary, updateContentItem } from '../../utils/storage';
+import { getContentLibrary, updateContentItem, softDeleteContentItem } from '../../utils/storage';
 import { autoParseContent, extractTextFromPDF } from '../../utils/contentParser';
 import './ReadMode.css';
 
@@ -21,6 +21,7 @@ export default function ReadMode() {
   
   // Study vs Edit Mode
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showSetMenu, setShowSetMenu] = useState(false);
   
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null);
@@ -114,6 +115,13 @@ export default function ReadMode() {
   const deleteItem = (id) => {
     if (window.confirm('Delete this item?')) {
       setItems(prev => prev.filter(item => item.id !== id));
+    }
+  };
+
+  const handleDeleteSet = () => {
+    if (window.confirm('Move this set to the Recycle Bin?')) {
+      softDeleteContentItem(contentId);
+      navigate('/dashboard');
     }
   };
 
@@ -274,6 +282,46 @@ export default function ReadMode() {
                   <span>{items.length} items</span>
                   <span>•</span>
                   <span>{new Date(content.createdAt).toLocaleDateString()}</span>
+                </div>
+                
+                <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+                  <button
+                    onClick={() => setShowSetMenu(!showSetMenu)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--w50)', cursor: 'pointer', padding: '4px' }}
+                  >
+                    <MoreHorizontal size={20} />
+                  </button>
+                  <AnimatePresence>
+                    {showSetMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                        transition={{ duration: 0.15 }}
+                        style={{
+                          position: 'absolute', top: '100%', right: 0,
+                          background: 'var(--bg)', border: '1px solid var(--border)',
+                          borderRadius: 'var(--r-md)', padding: '4px', zIndex: 10,
+                          minWidth: '140px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        <button
+                          onClick={handleDeleteSet}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            width: '100%', padding: '8px 12px', background: 'transparent',
+                            border: 'none', color: 'var(--accent-red)', cursor: 'pointer',
+                            fontFamily: 'var(--font-body)', fontSize: '0.8rem', textAlign: 'left',
+                            borderRadius: 'var(--r-sm)'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <Trash2 size={14} /> Move to Trash
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 

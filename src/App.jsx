@@ -21,6 +21,7 @@ import PracticeMode from './components/app/PracticeMode';
 import ReadMode from './components/app/ReadMode';
 import Dashboard from './components/app/Dashboard';
 import Login from './components/app/Login';
+import RecycleBin from './components/app/RecycleBin';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -67,6 +68,7 @@ function AppRoutes({ user, setUser }) {
         <Route path="/practice" element={<ProtectedRoute user={user}><PracticeMode /></ProtectedRoute>} />
         <Route path="/read" element={<ProtectedRoute user={user}><ReadMode /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute user={user}><Dashboard /></ProtectedRoute>} />
+        <Route path="/recycle-bin" element={<ProtectedRoute user={user}><RecycleBin /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );

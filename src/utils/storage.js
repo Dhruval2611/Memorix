@@ -44,9 +44,19 @@ export function removeFromStorage(key) {
   localStorage.removeItem(getPrefixedKey(key));
 }
 
-// Content Library
-export function getContentLibrary() {
+// Content Library Raw Access
+export function getAllContent() {
   return loadFromStorage(STORAGE_KEYS.CONTENT_LIBRARY, []);
+}
+
+// Active Content Only
+export function getContentLibrary() {
+  return getAllContent().filter(item => !item.deletedAt);
+}
+
+// Deleted Content Only
+export function getRecycleBin() {
+  return getAllContent().filter(item => item.deletedAt);
 }
 
 export function saveContentLibrary(library) {
@@ -54,7 +64,7 @@ export function saveContentLibrary(library) {
 }
 
 export function addContentItem(item) {
-  const library = getContentLibrary();
+  const library = getAllContent();
   const newItem = {
     ...item,
     id: Date.now().toString(36) + Math.random().toString(36).slice(2),
@@ -65,8 +75,26 @@ export function addContentItem(item) {
   return newItem;
 }
 
+export function softDeleteContentItem(id) {
+  const library = getAllContent();
+  const index = library.findIndex(item => item.id === id);
+  if (index !== -1) {
+    library[index].deletedAt = new Date().toISOString();
+    saveContentLibrary(library);
+  }
+}
+
+export function restoreContentItem(id) {
+  const library = getAllContent();
+  const index = library.findIndex(item => item.id === id);
+  if (index !== -1) {
+    delete library[index].deletedAt;
+    saveContentLibrary(library);
+  }
+}
+
 export function deleteContentItem(id) {
-  const library = getContentLibrary().filter(item => item.id !== id);
+  const library = getAllContent().filter(item => item.id !== id);
   saveContentLibrary(library);
   // Also clean up learning state for this content
   const state = getLearningState();
@@ -75,7 +103,7 @@ export function deleteContentItem(id) {
 }
 
 export function updateContentItem(id, updatedSet) {
-  const library = getContentLibrary();
+  const library = getAllContent();
   const index = library.findIndex(item => item.id === id);
   if (index !== -1) {
     library[index] = { 

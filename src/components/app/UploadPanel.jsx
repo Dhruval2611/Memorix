@@ -62,7 +62,7 @@ export default function UploadPanel() {
       }
       setExtractedItems(items);
     } catch (err) {
-      setError('Failed to process PDF. Please try copying the text manually.');
+      setError(`Failed to process PDF: ${err.message || err.toString()}`);
       console.error(err);
     } finally {
       setProcessing(false);

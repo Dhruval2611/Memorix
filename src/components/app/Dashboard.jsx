@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Target, Brain, Flame, TrendingUp, Trash2, Clock, Upload, Plus, Edit3 } from 'lucide-react';
+import { BookOpen, Target, Brain, Flame, TrendingUp, Trash2, Clock, Upload, Plus, Edit3, MoreHorizontal } from 'lucide-react';
 import Button from '../ui/Button';
 import GlowCard from '../ui/GlowCard';
 import ScrollReveal, { ScrollRevealItem } from '../animations/ScrollReveal';
-import { getContentLibrary, deleteContentItem, getUserStats, getSessionHistory } from '../../utils/storage';
+import { getContentLibrary, softDeleteContentItem, getUserStats, getSessionHistory } from '../../utils/storage';
 import { calculateStats, createLearningState } from '../../utils/adaptiveEngine';
 import { getLearningStateForContent } from '../../utils/storage';
 import './Dashboard.css';
@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [library, setLibrary] = useState([]);
   const [userStats, setUserStats] = useState({});
   const [history, setHistory] = useState([]);
+  const [activeMenu, setActiveMenu] = useState(null);
 
   useEffect(() => {
     setLibrary(getContentLibrary());
@@ -23,9 +24,10 @@ export default function Dashboard() {
   }, []);
 
   const handleDelete = (id) => {
-    if (window.confirm('Delete this content and all its learning data?')) {
-      deleteContentItem(id);
+    if (window.confirm('Move this set to the Recycle Bin?')) {
+      softDeleteContentItem(id);
       setLibrary(getContentLibrary());
+      setActiveMenu(null);
     }
   };
 
@@ -51,13 +53,22 @@ export default function Dashboard() {
             </h1>
             <p>Track your progress and manage your learning content.</p>
           </div>
-          <Button
-            variant="primary"
-            icon={<Plus size={16} />}
-            onClick={() => navigate('/upload')}
-          >
-            Upload Content
-          </Button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Button
+              variant="outline"
+              icon={<Trash2 size={16} />}
+              onClick={() => navigate('/recycle-bin')}
+            >
+              Recycle Bin
+            </Button>
+            <Button
+              variant="primary"
+              icon={<Plus size={16} />}
+              onClick={() => navigate('/upload')}
+            >
+              Upload Content
+            </Button>
+          </div>
         </motion.div>
 
         {/* Quick Stats */}
@@ -160,12 +171,52 @@ export default function Dashboard() {
                   <div key={content.id} className="library-item glass">
                     <div className="library-item-header">
                       <h3>{content.title}</h3>
-                      <button
-                        className="library-delete"
-                        onClick={() => handleDelete(content.id)}
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <div className="card-menu-container" style={{ position: 'relative' }}>
+                        <button
+                          className="card-menu-btn"
+                          onClick={() => setActiveMenu(activeMenu === content.id ? null : content.id)}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--w50)', cursor: 'pointer', padding: '4px' }}
+                        >
+                          <MoreHorizontal size={18} />
+                        </button>
+                        <AnimatePresence>
+                          {activeMenu === content.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                              transition={{ duration: 0.15 }}
+                              style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                background: 'var(--bg)',
+                                border: '1px solid var(--border)',
+                                borderRadius: 'var(--r-md)',
+                                padding: '4px',
+                                zIndex: 10,
+                                minWidth: '140px',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                              }}
+                            >
+                              <button
+                                onClick={() => handleDelete(content.id)}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: '8px',
+                                  width: '100%', padding: '8px 12px', background: 'transparent',
+                                  border: 'none', color: 'var(--accent-red)', cursor: 'pointer',
+                                  fontFamily: 'var(--font-body)', fontSize: '0.8rem', textAlign: 'left',
+                                  borderRadius: 'var(--r-sm)'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <Trash2 size={14} /> Move to Trash
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                     <div className="library-meta">
                       <span>{content.itemCount} items</span>
