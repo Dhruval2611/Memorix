@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import './CustomSelect.css';
 
-export default function CustomSelect({ options, value, onChange, placeholder = "Select an option..." }) {
+export default function CustomSelect({ options, value, onChange, placeholder = "Select an option...", size = "md" }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -21,7 +21,7 @@ export default function CustomSelect({ options, value, onChange, placeholder = "
   return (
     <div className="custom-select-container" ref={dropdownRef}>
       <div 
-        className={`custom-select-trigger ${isOpen ? 'open' : ''}`}
+        className={`custom-select-trigger size-${size} ${isOpen ? 'open' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>{selectedOption ? selectedOption.label : placeholder}</span>
@@ -33,7 +33,7 @@ export default function CustomSelect({ options, value, onChange, placeholder = "
           {options.map((opt) => (
             <div
               key={opt.value}
-              className={`custom-select-option ${opt.value === value ? 'selected' : ''}`}
+              className={`custom-select-option size-${size} ${opt.value === value ? 'selected' : ''}`}
               onClick={() => {
                 onChange(opt.value);
                 setIsOpen(false);

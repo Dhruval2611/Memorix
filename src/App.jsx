@@ -1,6 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
 import { useEffect, useState } from 'react';
+import { auth } from './utils/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { pullFromCloud } from './utils/storage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -48,40 +51,62 @@ function LandingPage() {
 
 function ProtectedRoute({ user, children }) {
   if (user === null) {
-    // If not logged in, redirect to login
     return <Navigate to="/login" replace />;
   }
   return children;
 }
 
 function AppRoutes({ user, setUser }) {
-  const location = useLocation();
-
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login setUser={setUser} />} />
-        
-        <Route path="/upload" element={<ProtectedRoute user={user}><UploadPanel /></ProtectedRoute>} />
-        <Route path="/test" element={<ProtectedRoute user={user}><TestMode /></ProtectedRoute>} />
-        <Route path="/practice" element={<ProtectedRoute user={user}><PracticeMode /></ProtectedRoute>} />
-        <Route path="/read" element={<ProtectedRoute user={user}><ReadMode /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute user={user}><Dashboard /></ProtectedRoute>} />
-        <Route path="/recycle-bin" element={<ProtectedRoute user={user}><RecycleBin /></ProtectedRoute>} />
-      </Routes>
-    </AnimatePresence>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<Login setUser={setUser} />} />
+      
+      <Route path="/upload" element={<ProtectedRoute user={user}><UploadPanel /></ProtectedRoute>} />
+      <Route path="/test" element={<ProtectedRoute user={user}><TestMode /></ProtectedRoute>} />
+      <Route path="/practice" element={<ProtectedRoute user={user}><PracticeMode /></ProtectedRoute>} />
+      <Route path="/read" element={<ProtectedRoute user={user}><ReadMode /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute user={user}><Dashboard /></ProtectedRoute>} />
+      <Route path="/recycle-bin" element={<ProtectedRoute user={user}><RecycleBin /></ProtectedRoute>} />
+    </Routes>
   );
 }
 
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('memorix_theme') || 'dark');
-  const [user, setUser] = useState(() => localStorage.getItem('memorix_current_user') || null);
+  const [user, setUser] = useState(undefined); // undefined = loading, null = not logged in, string = logged in
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('memorix_theme', theme);
   }, [theme]);
+
+  // Listen to Firebase Auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        localStorage.setItem('memorix_current_user', firebaseUser.uid);
+        setUser(firebaseUser.uid);
+        // Pull cloud data in background — don't block the UI
+        pullFromCloud().catch(console.error);
+      } else {
+        localStorage.removeItem('memorix_current_user');
+        setUser(null);
+      }
+      setAuthReady(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Show nothing while checking auth (prevents flash)
+  if (!authReady) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+        <div style={{ color: 'var(--w50)', fontFamily: 'var(--font-body)' }}>Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <Router>

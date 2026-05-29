@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Sun, Moon, Monitor, LogOut, User } from 'lucide-react';
+import { auth } from '../../utils/firebase';
+import { signOut } from 'firebase/auth';
 import './Navbar.css';
 
 const navLinks = [
@@ -69,14 +71,14 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div className="navbar-user-info" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--w50)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
-                  <User size={14} /> <span className="hide-mobile">{user}</span>
+                  <User size={14} /> <span className="hide-mobile">{auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'User'}</span>
                 </div>
                 <button
                   className="navbar-cta"
                   onClick={() => setShowLogoutConfirm(true)}
-                  style={{ background: 'transparent', color: 'var(--w50)', border: '1px solid var(--border-subtle)', padding: '6px 12px' }}
+                  style={{ display: 'flex', alignItems: 'center', background: 'transparent', color: 'var(--w50)', border: '1px solid var(--border-subtle)', padding: '6px 12px' }}
                 >
-                  <LogOut size={14} className="hide-mobile" style={{ marginRight: '6px', display: 'inline' }} />
+                  <LogOut size={14} className="hide-mobile" style={{ marginRight: '6px' }} />
                   <span className="hide-mobile">Logout</span>
                   <LogOut size={16} className="hide-desktop" />
                 </button>
@@ -101,14 +103,14 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <motion.div
               className="modal-content"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              style={{ padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(20,20,25,0.95)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', maxWidth: '400px', width: '90%', textAlign: 'center' }}
+              style={{ padding: '32px', borderRadius: '16px', border: '1px solid var(--border-subtle)', background: 'var(--bg)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)', maxWidth: '400px', width: '90%', textAlign: 'center' }}
             >
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: 'var(--accent)' }}>
                 <LogOut size={32} />
@@ -118,20 +120,19 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                 <button 
                   onClick={() => setShowLogoutConfirm(false)}
-                  style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--bg-hover)', color: 'var(--w70)', border: '1px solid var(--border-subtle)', cursor: 'pointer', flex: 1, transition: 'all 0.2s', fontFamily: 'var(--font-body)' }}
+                  style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--bg-surface)', color: 'var(--w70)', border: '1px solid var(--border-subtle)', cursor: 'pointer', flex: 1, transition: 'all 0.2s', fontFamily: 'var(--font-body)' }}
                 >
                   Cancel
                 </button>
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
+                    await signOut(auth);
                     localStorage.removeItem('memorix_current_user');
                     setUser(null);
                     setShowLogoutConfirm(false);
                     navigate('/login');
                   }}
-                  style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--accent)', color: '#000', border: 'none', cursor: 'pointer', flex: 1, fontWeight: '600', transition: 'all 0.2s', fontFamily: 'var(--font-body)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 15px var(--accent)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+                  style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer', flex: 1, fontWeight: '600', transition: 'all 0.2s', fontFamily: 'var(--font-body)' }}
                 >
                   Confirm
                 </button>

@@ -6,6 +6,8 @@
   justify-content: center;
   overflow: hidden;
   text-align: center;
+  padding-top: 100px;
+  padding-bottom: 100px;
 }
 
 /* Subtle ambient orbs */
@@ -76,15 +78,15 @@
 }
 
 .hero-name-wrap {
-  overflow: hidden;
   margin-bottom: 8px;
 }
 
 .hero-name {
-  font-size: clamp(4rem, 14vw, 10rem);
+  font-size: clamp(2.5rem, 10vw, 7.5rem);
   font-weight: 800;
   letter-spacing: -0.05em;
-  line-height: 0.95;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .hero-underline {
@@ -99,9 +101,9 @@
   font-weight: 300;
   font-size: clamp(0.9rem, 1.3vw, 1.05rem);
   color: var(--w40);
-  max-width: 480px;
+  max-width: 600px;
+  margin: 0 auto 40px;
   line-height: 1.85;
-  margin-bottom: 40px;
 }
 
 .hero-ctas {
@@ -133,7 +135,7 @@
 /* Scroll indicator */
 .hero-scroll {
   position: absolute;
-  bottom: 36px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;

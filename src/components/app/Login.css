@@ -196,3 +196,80 @@
   width: 100%;
   padding: 16px;
 }
+
+/* === Mobile / Tablet Compact Forms === */
+@media (max-width: 1024px) {
+  .login-page {
+    padding: 80px 16px 100px;
+    align-items: flex-start;
+  }
+
+  .login-box {
+    padding: 24px 20px;
+    gap: 20px;
+    max-width: 100%;
+    border-radius: var(--r-lg);
+  }
+
+  .login-header {
+    gap: 8px;
+  }
+
+  .login-icon-wrap {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 4px;
+  }
+
+  .login-icon-wrap svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .login-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .login-header p {
+    font-size: 0.8rem;
+  }
+
+  .login-form {
+    gap: 12px;
+  }
+
+  .input-group {
+    gap: 5px;
+  }
+
+  .input-group label {
+    font-size: 0.65rem;
+  }
+
+  .input-group input {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+
+  .login-error {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .login-form button[type="submit"] {
+    padding: 12px;
+  }
+
+  .login-footer {
+    font-size: 0.8rem;
+    margin-top: -4px;
+  }
+
+  .forgot-link {
+    margin-top: 2px;
+  }
+
+  .forgot-link button {
+    font-size: 0.75rem;
+  }
+}

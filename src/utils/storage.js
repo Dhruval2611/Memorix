@@ -1,21 +1,24 @@
 /* ============================================
-   Storage Utility — localStorage wrapper
+   Storage Utility — localStorage + Firestore sync
    ============================================ */
+import { db, auth } from './firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const STORAGE_KEYS = {
   CONTENT_LIBRARY: 'memorix_content_library',
   LEARNING_STATE: 'memorix_learning_state',
   USER_STATS: 'memorix_user_stats',
   SESSION_HISTORY: 'memorix_session_history',
-  USERS: 'memorix_users_auth_v2',
 };
 
+// ─── Core localStorage helpers ───
+
 export function getCurrentUser() {
-  return localStorage.getItem('memorix_current_user') || 'guest';
+  const fbUser = auth.currentUser;
+  return fbUser ? fbUser.uid : (localStorage.getItem('memorix_current_user') || 'guest');
 }
 
 function getPrefixedKey(key) {
-  if (key === STORAGE_KEYS.USERS) return key; // Global key, not prefixed by user
   const user = getCurrentUser();
   return `${user}_${key}`;
 }
@@ -23,6 +26,8 @@ function getPrefixedKey(key) {
 export function saveToStorage(key, data) {
   try {
     localStorage.setItem(getPrefixedKey(key), JSON.stringify(data));
+    // Fire-and-forget sync to Firestore
+    syncToCloud(key, data);
     return true;
   } catch (e) {
     console.error('Storage save error:', e);
@@ -44,17 +49,72 @@ export function removeFromStorage(key) {
   localStorage.removeItem(getPrefixedKey(key));
 }
 
-// Content Library Raw Access
+// ─── Firestore Cloud Sync ───
+
+function syncToCloud(key, data) {
+  const user = auth.currentUser;
+  if (!user) return; // Not logged in via Firebase, skip sync
+  
+  const docRef = doc(db, 'users', user.uid, 'data', key);
+  setDoc(docRef, { value: JSON.stringify(data), updatedAt: new Date().toISOString() })
+    .catch(err => console.warn('Cloud sync failed:', err.message));
+}
+
+export async function pullFromCloud() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const keys = Object.values(STORAGE_KEYS);
+  
+  for (const key of keys) {
+    try {
+      const docRef = doc(db, 'users', user.uid, 'data', key);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const cloudData = snap.data().value;
+        const localKey = `${user.uid}_${key}`;
+        // Only overwrite if local is empty or cloud is newer
+        const localRaw = localStorage.getItem(localKey);
+        if (!localRaw || localRaw === 'null' || localRaw === '[]' || localRaw === '{}') {
+          localStorage.setItem(localKey, cloudData);
+        }
+      }
+    } catch (err) {
+      console.warn(`Cloud pull failed for ${key}:`, err.message);
+    }
+  }
+}
+
+// Force push all local data to cloud (useful after signup/migration)
+export async function pushAllToCloud() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const keys = Object.values(STORAGE_KEYS);
+  for (const key of keys) {
+    const localKey = `${user.uid}_${key}`;
+    const raw = localStorage.getItem(localKey);
+    if (raw && raw !== 'null') {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'data', key);
+        await setDoc(docRef, { value: raw, updatedAt: new Date().toISOString() });
+      } catch (err) {
+        console.warn(`Cloud push failed for ${key}:`, err.message);
+      }
+    }
+  }
+}
+
+// ─── Content Library ───
+
 export function getAllContent() {
   return loadFromStorage(STORAGE_KEYS.CONTENT_LIBRARY, []);
 }
 
-// Active Content Only
 export function getContentLibrary() {
   return getAllContent().filter(item => !item.deletedAt);
 }
 
-// Deleted Content Only
 export function getRecycleBin() {
   return getAllContent().filter(item => item.deletedAt);
 }
@@ -96,7 +156,6 @@ export function restoreContentItem(id) {
 export function deleteContentItem(id) {
   const library = getAllContent().filter(item => item.id !== id);
   saveContentLibrary(library);
-  // Also clean up learning state for this content
   const state = getLearningState();
   delete state[id];
   saveLearningState(state);
@@ -117,7 +176,8 @@ export function updateContentItem(id, updatedSet) {
   return null;
 }
 
-// Learning State
+// ─── Learning State ───
+
 export function getLearningState() {
   return loadFromStorage(STORAGE_KEYS.LEARNING_STATE, {});
 }
@@ -137,7 +197,8 @@ export function saveLearningStateForContent(contentId, contentState) {
   saveLearningState(state);
 }
 
-// User Stats
+// ─── User Stats ───
+
 export function getUserStats() {
   return loadFromStorage(STORAGE_KEYS.USER_STATS, {
     totalSessions: 0,
@@ -153,7 +214,6 @@ export function updateUserStats(updates) {
   const stats = getUserStats();
   const updated = { ...stats, ...updates };
 
-  // Streak logic
   const today = new Date().toDateString();
   const lastDate = stats.lastPracticeDate ? new Date(stats.lastPracticeDate).toDateString() : null;
 
@@ -172,7 +232,8 @@ export function updateUserStats(updates) {
   return updated;
 }
 
-// Session History
+// ─── Session History ───
+
 export function getSessionHistory() {
   return loadFromStorage(STORAGE_KEYS.SESSION_HISTORY, []);
 }
@@ -183,43 +244,8 @@ export function addSessionRecord(record) {
     ...record,
     timestamp: new Date().toISOString(),
   });
-  // Keep last 50 sessions
   if (history.length > 50) history.pop();
   saveToStorage(STORAGE_KEYS.SESSION_HISTORY, history);
-}
-
-// Authentication / Users
-export function getAllUsers() {
-  return loadFromStorage(STORAGE_KEYS.USERS, []);
-}
-
-export function registerUser(username, password, email) {
-  const users = getAllUsers();
-  if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) return false; // Already exists
-  users.push({ username, password, email });
-  saveToStorage(STORAGE_KEYS.USERS, users);
-  return true;
-}
-
-export function verifyLogin(username, password) {
-  const users = getAllUsers();
-  return users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
-}
-
-export function getUserByEmail(email) {
-  const users = getAllUsers();
-  return users.find(u => u.email === email);
-}
-
-export function resetPassword(username, newPassword) {
-  const users = getAllUsers();
-  const index = users.findIndex(u => u.username.toLowerCase() === username.toLowerCase());
-  if (index !== -1) {
-    users[index].password = newPassword;
-    saveToStorage(STORAGE_KEYS.USERS, users);
-    return true;
-  }
-  return false;
 }
 
 export { STORAGE_KEYS };

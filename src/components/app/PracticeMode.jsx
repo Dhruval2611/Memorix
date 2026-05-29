@@ -99,7 +99,23 @@ export default function PracticeMode() {
     }, 2000);
   }, [userAnswer, currentItem, learningState, contentId, items, recentIds, currentDirection, directionSetting]);
 
+  const smartWrap = (text) => {
+    if (!text) return text;
+    const result = [];
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '(' && i > 0) result.push(<wbr key={`b${i}`} />);
+      result.push(ch);
+      if (ch === '/' && i < text.length - 1) result.push(<wbr key={`a${i}`} />);
+    }
+    return result;
+  };
+
   const endSession = () => {
+    if (sessionStats.total === 0) {
+      setStage('setup');
+      return;
+    }
     updateUserStats({
       totalCorrect: sessionStats.correct,
       totalWrong: sessionStats.wrong,
@@ -132,9 +148,18 @@ export default function PracticeMode() {
     <div className="practice-page">
 
       <div className="container">
-        <button className="back-btn" onClick={() => stage === 'practice' ? endSession() : navigate(-1)}>
-          <ArrowLeft size={16} /> {stage === 'practice' ? 'End Session' : 'Back'}
-        </button>
+        {stage !== 'setup' && (
+          <button className="back-btn" style={{ marginBottom: '40px' }} onClick={() => {
+            if (stage === 'practice') {
+              endSession();
+            } else if (stage === 'summary') {
+              setStage('setup');
+              setSessionStats({ correct: 0, wrong: 0, total: 0 });
+            }
+          }}>
+            <ArrowLeft size={16} /> {stage === 'practice' ? 'End Session' : 'Back'}
+          </button>
+        )}
 
         <AnimatePresence mode="wait">
           {/* SETUP */}
@@ -142,9 +167,9 @@ export default function PracticeMode() {
             <motion.div
               key="setup"
               className="practice-setup"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
               <h1>
                 <span className="gradient-text">Practice</span> Mode
@@ -222,9 +247,9 @@ export default function PracticeMode() {
             <motion.div
               key="practice"
               className="practice-active"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
               {/* Session sidebar stats */}
               <div className="practice-sidebar">
@@ -277,7 +302,7 @@ export default function PracticeMode() {
 
                   <span className="question-type-badge">{currentItem.type}</span>
                   <div className="practice-term">
-                    {currentItem.type === 'fill-blank' ? currentItem.term : (currentDirection === 'term-to-def' ? currentItem.term : currentItem.definition)}
+                    {currentItem.type === 'fill-blank' ? smartWrap(currentItem.term) : (currentDirection === 'term-to-def' ? smartWrap(currentItem.term) : smartWrap(currentItem.definition))}
                   </div>
                   <p className="practice-prompt">
                     {currentItem.type === 'fill-blank'

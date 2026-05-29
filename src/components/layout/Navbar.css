@@ -10,10 +10,8 @@
 
 .navbar-scrolled {
   padding: 14px 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .navbar-inner {
@@ -95,7 +93,7 @@
   padding: 8px 20px;
   background: transparent;
   color: var(--w50);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--r-full);
   font-family: var(--font-mono);
   font-size: 0.55rem;

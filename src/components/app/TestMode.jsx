@@ -26,6 +26,25 @@ export default function TestMode() {
     setLibrary(getContentLibrary());
   }, []);
 
+  const smartWrap = (text) => {
+    if (!text) return text;
+    const result = [];
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '(' && i > 0) result.push(<wbr key={`b${i}`} />);
+      result.push(ch);
+      if (ch === '/' && i < text.length - 1) result.push(<wbr key={`a${i}`} />);
+    }
+    return result;
+  };
+
+  const endTest = () => {
+    setStage('setup');
+    setResults([]);
+    setQuestions([]);
+    setCurrentQ(0);
+  };
+
   const startTest = () => {
     const content = library.find(c => c.id === contentId);
     if (!content) return;
@@ -111,9 +130,18 @@ export default function TestMode() {
     <div className="test-page">
 
       <div className="container">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          <ArrowLeft size={16} /> Back
-        </button>
+        {stage !== 'setup' && (
+          <button className="back-btn" style={{ marginBottom: '40px' }} onClick={() => {
+            if (stage === 'test') {
+              endTest();
+            } else if (stage === 'results') {
+              setStage('setup');
+              setResults([]);
+            }
+          }}>
+            <ArrowLeft size={16} /> {stage === 'test' ? 'End Test' : 'Back'}
+          </button>
+        )}
 
         <AnimatePresence mode="wait">
           {/* SETUP */}
@@ -121,9 +149,9 @@ export default function TestMode() {
             <motion.div
               key="setup"
               className="test-setup"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
               <h1>
                 <span className="gradient-text">Test</span> Mode
@@ -215,9 +243,9 @@ export default function TestMode() {
             <motion.div
               key="test"
               className="test-active"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
               {/* Progress */}
               <div className="test-progress-bar">
@@ -247,7 +275,7 @@ export default function TestMode() {
                 >
                   <span className="question-type-badge">{questions[currentQ].type}</span>
                   <div className="question-term">
-                    {questions[currentQ].type === 'fill-blank' ? questions[currentQ].term : (testDirections[currentQ] === 'term-to-def' ? questions[currentQ].term : questions[currentQ].definition)}
+                    {questions[currentQ].type === 'fill-blank' ? smartWrap(questions[currentQ].term) : (testDirections[currentQ] === 'term-to-def' ? smartWrap(questions[currentQ].term) : smartWrap(questions[currentQ].definition))}
                   </div>
                   <p className="question-prompt">
                     {questions[currentQ].type === 'fill-blank'

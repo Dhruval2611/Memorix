@@ -2,6 +2,7 @@
   padding: 120px 0 60px 0;
   min-height: 100vh;
   color: var(--w85);
+  overflow: visible;
 }
 
 .read-header-actions {
@@ -35,9 +36,10 @@
 }
 
 .read-setup h1 {
-  font-size: 3rem;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
   margin-bottom: 16px;
   letter-spacing: -1px;
+  white-space: nowrap;
 }
 
 .read-setup p {
@@ -463,7 +465,7 @@
 .flashcard {
   width: 100%;
   max-width: 600px;
-  height: 400px;
+  min-height: 300px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-lg);
@@ -478,39 +480,42 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 48px 28px;
   width: 100%;
-  height: 100%;
   text-align: center;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
 }
 
 .card-divider {
   width: 40px;
   height: 2px;
   background: var(--accent);
-  margin: 24px 0;
+  margin: 20px 0;
   opacity: 0.5;
 }
 
 .flashcard h3 {
-  font-size: 2.5rem;
+  font-size: clamp(1rem, 3.5vw, 1.8rem);
   color: var(--w85);
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.4;
+  max-width: 100%;
 }
 
 .flashcard p {
-  font-size: 1.5rem;
+  font-size: clamp(0.85rem, 2.2vw, 1.15rem);
   color: var(--w70);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.6;
+  max-width: 100%;
 }
 
 .card-type-badge {
   position: absolute;
-  top: 20px;
-  font-size: 0.7rem;
-  padding: 4px 10px;
+  top: 16px;
+  font-size: 0.65rem;
+  padding: 3px 10px;
   background: rgba(255,255,255,0.05);
   border-radius: 12px;
   color: var(--accent);
@@ -518,28 +523,218 @@
   letter-spacing: 1px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .read-page {
+    padding: 90px 0 90px;
+  }
+
+  .read-header-actions {
+    margin-bottom: 20px;
+  }
+
+  .read-setup {
+    padding: 30px 0;
+  }
+
   .read-setup h1 {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
   }
-  .title-display-wrap h2 {
-    font-size: 2rem;
+
+  .read-setup p {
+    font-size: 0.85rem;
+    margin-bottom: 24px;
   }
+
   .read-title-section {
-    padding: 30px 20px;
+    padding: 20px 16px;
+    margin-bottom: 20px;
   }
-  
+
+  .read-title-icon {
+    margin-bottom: 10px;
+  }
+
+  .read-title-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .title-display-wrap {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .title-display-wrap h2 {
+    font-size: 1.1rem;
+    letter-spacing: 0;
+  }
+
+  .title-edit-input {
+    font-size: 1.1rem;
+  }
+
+  .read-meta {
+    font-size: 0.65rem;
+    gap: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .view-mode-toggle {
+    margin-bottom: 16px;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .toggle-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .toggle-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Card View */
+  .card-view-container {
+    margin: 16px 0;
+  }
+
+  .card-navigation {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .nav-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .nav-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .card-counter {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+  }
+
+  .flashcard {
+    min-height: 200px;
+    max-width: 100%;
+    border-radius: var(--r-md);
+  }
+
+  .flashcard-inner-static {
+    padding: 32px 16px;
+  }
+
+  .flashcard h3 {
+    font-size: 0.95rem;
+  }
+
+  .flashcard p {
+    font-size: 0.82rem;
+  }
+
+  .card-divider {
+    margin: 12px 0;
+    width: 30px;
+  }
+
+  .card-type-badge {
+    top: 10px;
+    font-size: 0.55rem;
+    padding: 2px 8px;
+  }
+
+  /* List & Grid View */
+  .mode-list {
+    gap: 10px;
+  }
+
   .mode-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
-  
-  .flashcard {
-    height: 350px;
+
+  .read-item-card {
+    padding: 14px;
+    gap: 12px;
   }
-  .flashcard h3 {
-    font-size: 2rem;
+
+  .read-item-type {
+    font-size: 0.6rem;
+    margin-bottom: 6px;
+    letter-spacing: 1.5px;
   }
-  .flashcard p {
-    font-size: 1.2rem;
+
+  .read-item-term {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+
+  .read-item-def {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .read-item-actions {
+    opacity: 1;
+    flex-direction: row;
+    gap: 4px;
+  }
+
+  .action-icon {
+    padding: 6px;
+  }
+
+  /* Edit mode */
+  .edit-fields {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .edit-field label {
+    font-size: 0.65rem;
+    margin-bottom: 4px;
+  }
+
+  .read-edit-input, .read-edit-textarea {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .read-edit-input {
+    font-size: 0.95rem;
+  }
+
+  .edit-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .add-item-btn {
+    padding: 16px;
+    font-size: 0.9rem;
+    margin-top: 16px;
+  }
+
+  /* Setup selects */
+  .setup-select {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+
+  .setup-field label {
+    font-size: 0.7rem;
+    margin-bottom: 6px;
+  }
+
+  .back-btn {
+    font-size: 0.8rem;
+    gap: 6px;
   }
 }

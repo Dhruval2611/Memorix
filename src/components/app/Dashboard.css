@@ -1,6 +1,6 @@
-.dashboard-page { position: relative; min-height: 100vh; padding: 120px 0 80px; overflow: hidden; }
+.dashboard-page { position: relative; min-height: 100vh; padding: 120px 0 80px; overflow: visible; }
 .dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
-.dashboard-header h1 { font-size: clamp(2rem, 5vw, 3.2rem); margin-bottom: 8px; }
+.dashboard-header h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin-bottom: 8px; white-space: nowrap; }
 .dashboard-header > div > p { color: var(--w30); font-size: 0.88rem; }
 .quick-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
 .quick-stat { display: flex; align-items: center; gap: 14px; padding: 20px; background: var(--bg-surface); border: var(--border); border-radius: var(--r-lg); }
@@ -47,4 +47,44 @@
 .session-result { text-align: right; display: flex; flex-direction: column; gap: 2px; }
 .session-accuracy { font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: var(--green); }
 .session-detail { font-family: var(--font-mono); font-size: 0.45rem; color: var(--w15); }
-@media (max-width: 768px) { .quick-stats { grid-template-columns: repeat(2, 1fr); } .quick-actions { grid-template-columns: 1fr; } .library-grid { grid-template-columns: 1fr; } .dashboard-header { flex-direction: column; } }
+@media (max-width: 1024px) {
+  .dashboard-page { padding: 90px 0 90px; }
+  .dashboard-header { margin-bottom: 20px; gap: 12px; flex-direction: column; }
+  .dashboard-header h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  .dashboard-header > div > p { font-size: 0.78rem; }
+  .dashboard-header > div:last-child { display: flex; width: 100%; gap: 8px; }
+  .dashboard-header > div:last-child button { flex: 1; font-size: 0.7rem; padding: 8px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .quick-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+  .quick-stat { padding: 14px; gap: 10px; }
+  .qs-icon { width: 32px; height: 32px; border-radius: 8px; }
+  .qs-icon svg { width: 14px; height: 14px; }
+  .qs-value { font-size: 1.1rem; }
+  .qs-label { font-size: 0.4rem; }
+  .quick-actions { grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 28px; }
+  .action-card .glow-card-content { padding: 16px 10px; gap: 6px; }
+  .action-card svg { width: 18px; height: 18px; }
+  .action-card h3 { font-size: 0.75rem; }
+  .action-card p { font-size: 0.55rem; }
+  .content-library { margin-bottom: 28px; }
+  .content-library h2 { font-size: 1rem; margin-bottom: 14px; }
+  .library-grid { grid-template-columns: 1fr; gap: 8px; }
+  .library-item { padding: 16px; gap: 10px; }
+  .library-item h3 { font-size: 0.85rem; }
+  .library-meta { font-size: 0.45rem; }
+  .library-stats-row { gap: 14px; }
+  .lib-stat-val { font-size: 0.9rem; }
+  .library-actions { gap: 4px; }
+  .lib-action-btn { padding: 6px 10px; font-size: 0.45rem; }
+  .empty-library { padding: 40px 20px; }
+  .empty-library h3 { font-size: 0.9rem; }
+  .empty-library p { font-size: 0.75rem; }
+  .recent-sessions h2 { font-size: 1rem; margin-bottom: 14px; }
+  .sessions-list { gap: 4px; }
+  .session-item { padding: 10px 14px; gap: 10px; }
+  .session-icon { width: 26px; height: 26px; border-radius: 6px; }
+  .session-icon svg { width: 12px; height: 12px; }
+  .session-type { font-size: 0.75rem; }
+  .session-date { font-size: 0.4rem; }
+  .session-accuracy { font-size: 0.85rem; }
+  .session-detail { font-size: 0.4rem; }
+}

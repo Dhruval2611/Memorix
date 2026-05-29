@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Home, BookOpen, Brain, GraduationCap, LayoutDashboard } from 'lucide-react';
 import './MobileBottomNav.css';
 
@@ -22,28 +21,17 @@ export default function MobileBottomNav() {
           const isActive = location.pathname === item.path;
           
           return (
-            <motion.div 
-              key={item.path}
-              className="mobile-nav-item"
-              whileTap={{ scale: 0.85 }}
-            >
+            <div key={item.path} className="mobile-nav-item">
               <Link 
                 to={item.path} 
                 className={`mobile-nav-link ${isActive ? 'active' : ''}`}
               >
                 <div className="icon-wrapper">
-                  <Icon size={22} className="icon" />
-                  {isActive && (
-                    <motion.div
-                      layoutId="mobileNavIndicator"
-                      className="nav-indicator"
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    />
-                  )}
+                  <Icon size={20} className="icon" />
                 </div>
                 <span>{item.label}</span>
               </Link>
-            </motion.div>
+            </div>
           );
         })}
       </div>

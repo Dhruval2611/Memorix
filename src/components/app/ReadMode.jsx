@@ -13,6 +13,28 @@ export default function ReadMode() {
   const location = useLocation();
   const initialContentId = location.state?.contentId || '';
 
+  // Helper: insert <wbr> (word break opportunity) at smart positions
+  // so the browser wraps only when needed, keeping brackets with their word.
+  // Break points: after '/' and before '('
+  const smartWrap = (text) => {
+    if (!text) return text;
+    // Split into characters, insert <wbr> at break opportunities
+    const result = [];
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      // Insert break opportunity BEFORE '('
+      if (ch === '(' && i > 0) {
+        result.push(<wbr key={`b${i}`} />);
+      }
+      result.push(ch);
+      // Insert break opportunity AFTER '/'
+      if (ch === '/' && i < text.length - 1) {
+        result.push(<wbr key={`a${i}`} />);
+      }
+    }
+    return result;
+  };
+
   const [library, setLibrary] = useState([]);
   const [contentId, setContentId] = useState(initialContentId);
   const [content, setContent] = useState(null);
@@ -63,6 +85,20 @@ export default function ReadMode() {
       }
     }
   }, [initialContentId]);
+
+  // Keyboard arrow navigation for card view
+  useEffect(() => {
+    if (viewMode !== 'card') return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        setCurrentCardIndex(prev => Math.max(0, prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        setCurrentCardIndex(prev => Math.min(filteredItems.length - 1, prev + 1));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewMode, filteredItems.length]);
 
   const handleSelectContent = (id) => {
     setContentId(id);
@@ -189,9 +225,31 @@ export default function ReadMode() {
     <div className="read-page">
       <div className="container">
         <div className="read-header-actions">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            <ArrowLeft size={16} /> Back
-          </button>
+          {content && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <button className="back-btn" onClick={() => {
+                setContent(null);
+                setContentId('');
+                setIsEditMode(false);
+              }}>
+                <ArrowLeft size={16} /> Back
+              </button>
+
+              {!isEditMode && library.length > 1 && (
+                <div className="hide-mobile" style={{ width: '200px' }}>
+                  <CustomSelect 
+                    value={contentId} 
+                    onChange={(val) => handleSelectContent(val)}
+                    size="sm"
+                    options={library.map(c => ({
+                      value: c.id,
+                      label: c.title
+                    }))}
+                  />
+                </div>
+              )}
+            </div>
+          )}
           
           {content && (
             isEditMode ? (
@@ -216,9 +274,9 @@ export default function ReadMode() {
             <motion.div
               key="setup"
               className="read-setup"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
               <h1>
                 <span className="gradient-text">Study</span> Guide
@@ -251,8 +309,8 @@ export default function ReadMode() {
             <motion.div
               key="reader"
               className="read-active"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
             >
               <div className="read-title-section glass">
                 <BookOpen className="read-title-icon" size={32} />
@@ -368,9 +426,9 @@ export default function ReadMode() {
                   <div className="flashcard glass">
                     <div className="flashcard-inner-static">
                       <div className="card-type-badge">{filteredItems[currentCardIndex].type}</div>
-                      <h3>{filteredItems[currentCardIndex].term}</h3>
+                      <h3>{smartWrap(filteredItems[currentCardIndex].term)}</h3>
                       <div className="card-divider"></div>
-                      <p>{filteredItems[currentCardIndex].definition}</p>
+                      <p>{smartWrap(filteredItems[currentCardIndex].definition)}</p>
                     </div>
                   </div>
                 </div>

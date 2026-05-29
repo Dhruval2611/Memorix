@@ -6,17 +6,25 @@
 
 .custom-select-trigger {
   width: 100%;
-  padding: 14px 16px;
   background: var(--bg-surface);
   border: var(--border-subtle);
   border-radius: 8px;
   color: var(--w85);
-  font-size: 1rem;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
   transition: all 0.2s ease;
+}
+
+.custom-select-trigger.size-md {
+  padding: 14px 16px;
+  font-size: 1rem;
+}
+
+.custom-select-trigger.size-sm {
+  padding: 8px 12px;
+  font-size: 0.8rem;
 }
 
 .custom-select-trigger:hover, .custom-select-trigger.open {
@@ -57,10 +65,19 @@
 }
 
 .custom-select-option {
-  padding: 12px 16px;
   color: var(--w70);
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.custom-select-option.size-md {
+  padding: 12px 16px;
+  font-size: 1rem;
+}
+
+.custom-select-option.size-sm {
+  padding: 8px 12px;
+  font-size: 0.8rem;
 }
 
 .custom-select-option:hover {

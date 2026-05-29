@@ -3,132 +3,117 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Eye, EyeOff, UserPlus, KeyRound, AlertCircle, ArrowLeft } from 'lucide-react';
 import Button from '../ui/Button';
-import { verifyLogin, registerUser, getUserByEmail, resetPassword, getAllUsers } from '../../utils/storage';
-import { sendEmailOtp } from '../../utils/emailService';
+import { auth } from '../../utils/firebase';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  sendPasswordResetEmail,
+  updateProfile 
+} from 'firebase/auth';
+import { pullFromCloud } from '../../utils/storage';
 import './Login.css';
 
 export default function Login({ setUser }) {
-  const [view, setView] = useState('login'); // login | signup | forgot | otp | reset
+  const [view, setView] = useState('login'); // login | signup | forgot
   const navigate = useNavigate();
 
   // Form Fields
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   
   // UI State
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [mockOtpValue, setMockOtpValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   // Handle Login
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    if (!username.trim() || !password.trim()) return;
+    if (!email.trim() || !password.trim()) return;
 
-    // Special case: if this is the very first time using the app and there are no users, jump to signup
-    const allUsers = getAllUsers();
-    if (allUsers.length === 0) {
-      setView('signup');
-      setError('No users exist yet. Please create an account.');
-      return;
-    }
-
-    const user = verifyLogin(username.trim(), password.trim());
-    if (user) {
-      localStorage.setItem('memorix_current_user', user.username);
-      setUser(user.username);
+    setLoading(true);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
+      localStorage.setItem('memorix_current_user', cred.user.uid);
+      setUser(cred.user.uid);
+      // Pull cloud data in background — don't block navigation
+      pullFromCloud().catch(console.error);
       navigate('/dashboard');
-    } else {
-      setError('Invalid username or password.');
+    } catch (err) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        setError('Invalid email or password.');
+      } else if (err.code === 'auth/wrong-password') {
+        setError('Incorrect password.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many attempts. Please try again later.');
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   // Handle Signup
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!email.includes('@') || !email.includes('.')) {
       setError('Please enter a valid email address.');
       return;
     }
+    if (password.trim().length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
 
-    const success = registerUser(username.trim(), password.trim(), email.trim());
-    if (success) {
-      localStorage.setItem('memorix_current_user', username.trim());
-      setUser(username.trim());
+    setLoading(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email.trim(), password.trim());
+      // Set display name
+      await updateProfile(cred.user, { displayName: username.trim() || email.split('@')[0] });
+      localStorage.setItem('memorix_current_user', cred.user.uid);
+      setUser(cred.user.uid);
       navigate('/dashboard');
-    } else {
-      setError('Username already exists. Please choose another.');
+    } catch (err) {
+      if (err.code === 'auth/email-already-in-use') {
+        setError('This email is already registered. Please log in instead.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password is too weak. Use at least 6 characters.');
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle Forgot Password - Step 1: Send OTP
-  const handleSendOtp = async (e) => {
+  // Handle Forgot Password
+  const handleForgotPassword = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!email.includes('@') || !email.includes('.')) {
       setError('Please enter a valid email address.');
       return;
     }
 
-    const user = getUserByEmail(email.trim());
-    if (!user) {
-      setError('No account found with this email address.');
-      return;
-    }
-
-    // Generate mock OTP
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setMockOtpValue(code);
-    
-    // Simulate real SMS/Email dispatch
-    const result = await sendEmailOtp(email.trim(), code);
-    if (result.success) {
-      setView('otp');
-    } else {
-      setError(result.message);
-    }
-  };
-
-  // Handle OTP Verification
-  const handleVerifyOtp = (e) => {
-    e.preventDefault();
-    setError('');
-    
-    if (otp === mockOtpValue) {
-      setView('reset');
-    } else {
-      setError('Invalid OTP. Please try again.');
-    }
-  };
-
-  // Handle Password Reset
-  const handleResetPassword = (e) => {
-    e.preventDefault();
-    setError('');
-    
-    const user = getUserByEmail(email.trim());
-    if (!user) return;
-
-    if (newPassword.trim() === user.password) {
-      setError('New password cannot be the same as the old password.');
-      return;
-    }
-
-    if (newPassword.trim().length >= 4) {
-      resetPassword(user.username, newPassword.trim());
-      setView('login');
-      setUsername(user.username);
-      setPassword('');
-      alert('Password reset successful! Please log in.');
-    } else {
-      setError('Password must be at least 4 characters.');
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setResetSent(true);
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') {
+        setError('No account found with this email.');
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,6 +121,7 @@ export default function Login({ setUser }) {
     setView(newView);
     setError('');
     setShowPassword(false);
+    setResetSent(false);
   };
 
   return (
@@ -157,19 +143,19 @@ export default function Login({ setUser }) {
                   <LogIn size={28} />
                 </div>
                 <h2>Welcome Back</h2>
-                <p>Log in to access your personal study sets.</p>
+                <p>Log in to access your study sets on any device.</p>
               </div>
 
               {error && <div className="login-error"><AlertCircle size={14}/> {error}</div>}
 
               <form onSubmit={handleLogin} className="login-form">
                 <div className="input-group">
-                  <label>Username</label>
+                  <label>Email</label>
                   <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. Alice"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. alice@example.com"
                     required
                   />
                 </div>
@@ -193,8 +179,8 @@ export default function Login({ setUser }) {
                   </div>
                 </div>
                 
-                <Button variant="primary" type="submit" disabled={!username.trim() || !password.trim()}>
-                  Log In
+                <Button variant="primary" type="submit" disabled={loading || !email.trim() || !password.trim()}>
+                  {loading ? 'Logging in...' : 'Log In'}
                 </Button>
                 
                 <div className="login-footer">
@@ -229,13 +215,12 @@ export default function Login({ setUser }) {
 
               <form onSubmit={handleSignup} className="login-form">
                 <div className="input-group">
-                  <label>Username</label>
+                  <label>Display Name</label>
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Choose a username"
-                    required
+                    placeholder="Choose a display name"
                   />
                 </div>
 
@@ -251,7 +236,7 @@ export default function Login({ setUser }) {
                 </div>
                 
                 <div className="input-group">
-                  <label>Password</label>
+                  <label>Password (min 6 characters)</label>
                   <div className="password-input-wrap">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -266,8 +251,8 @@ export default function Login({ setUser }) {
                   </div>
                 </div>
                 
-                <Button variant="primary" type="submit" disabled={!username.trim() || !password.trim() || !email.includes('@')}>
-                  Create Account
+                <Button variant="primary" type="submit" disabled={loading || !password.trim() || !email.includes('@')}>
+                  {loading ? 'Creating...' : 'Create Account'}
                 </Button>
                 
                 <div className="login-footer">
@@ -278,7 +263,7 @@ export default function Login({ setUser }) {
             </motion.div>
           )}
 
-          {/* FORGOT PASSWORD - PHONE */}
+          {/* FORGOT PASSWORD */}
           {view === 'forgot' && (
             <motion.div
               key="forgot"
@@ -295,126 +280,44 @@ export default function Login({ setUser }) {
                   <KeyRound size={28} />
                 </div>
                 <h2>Reset Password</h2>
-                <p>Enter your registered email address to receive an OTP.</p>
+                <p>We'll send a password reset link to your email.</p>
               </div>
 
               {error && <div className="login-error"><AlertCircle size={14}/> {error}</div>}
 
-              <form onSubmit={handleSendOtp} className="login-form">
-                <div className="input-group">
-                  <label>Email Address</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. alice@example.com"
-                    autoFocus
-                    required
-                  />
+              {resetSent ? (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{ color: 'var(--accent)', fontSize: '1.1rem', marginBottom: '12px' }}>✓ Reset email sent!</div>
+                  <p style={{ color: 'var(--w50)', fontSize: '0.85rem' }}>
+                    Check your inbox at <strong>{email}</strong> and follow the link to reset your password.
+                  </p>
+                  <div className="login-footer" style={{ marginTop: '20px' }}>
+                    <button type="button" onClick={() => switchView('login')}>Back to Login</button>
+                  </div>
                 </div>
-                
-                <Button variant="primary" type="submit" disabled={!email.includes('@')}>
-                  Send OTP via Email
-                </Button>
-                
-                <div className="login-footer">
-                  <button type="button" onClick={() => switchView('login')}>Back to Login</button>
-                </div>
-              </form>
-            </motion.div>
-          )}
-
-          {/* OTP VERIFICATION */}
-          {view === 'otp' && (
-            <motion.div
-              key="otp"
-              className="login-box glass"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-            >
-              <div className="login-header">
-                <button type="button" className="back-btn-icon" onClick={() => switchView('forgot')}>
-                  <ArrowLeft size={20} />
-                </button>
-                <div className="login-icon-wrap">
-                  <KeyRound size={28} />
-                </div>
-                <h2>Verify OTP</h2>
-                <p>We've sent a 6-digit code to {email}</p>
-              </div>
-
-              {error && <div className="login-error"><AlertCircle size={14}/> {error}</div>}
-
-              <form onSubmit={handleVerifyOtp} className="login-form">
-                <div className="input-group">
-                  <label>Enter OTP</label>
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="000000"
-                    style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.2em' }}
-                    autoFocus
-                    required
-                  />
-                </div>
-                
-                <Button variant="primary" type="submit" disabled={otp.length !== 6}>
-                  Verify OTP
-                </Button>
-                
-                <div className="login-footer">
-                  <button type="button" onClick={() => switchView('forgot')}>Change Email Address</button>
-                </div>
-              </form>
-            </motion.div>
-          )}
-
-          {/* RESET PASSWORD */}
-          {view === 'reset' && (
-            <motion.div
-              key="reset"
-              className="login-box glass"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-            >
-              <div className="login-header">
-                <button type="button" className="back-btn-icon" onClick={() => switchView('login')}>
-                  <ArrowLeft size={20} />
-                </button>
-                <div className="login-icon-wrap">
-                  <KeyRound size={28} />
-                </div>
-                <h2>Create New Password</h2>
-                <p>Please enter your new password below.</p>
-              </div>
-
-              {error && <div className="login-error"><AlertCircle size={14}/> {error}</div>}
-
-              <form onSubmit={handleResetPassword} className="login-form">
-                <div className="input-group">
-                  <label>New Password</label>
-                  <div className="password-input-wrap">
+              ) : (
+                <form onSubmit={handleForgotPassword} className="login-form">
+                  <div className="input-group">
+                    <label>Email Address</label>
                     <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••••"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="e.g. alice@example.com"
                       autoFocus
                       required
                     />
-                    <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
-                </div>
-                
-                <Button variant="primary" type="submit" disabled={newPassword.length < 4}>
-                  Reset Password
-                </Button>
-              </form>
+                  
+                  <Button variant="primary" type="submit" disabled={loading || !email.includes('@')}>
+                    {loading ? 'Sending...' : 'Send Reset Link'}
+                  </Button>
+                  
+                  <div className="login-footer">
+                    <button type="button" onClick={() => switchView('login')}>Back to Login</button>
+                  </div>
+                </form>
+              )}
             </motion.div>
           )}
 
