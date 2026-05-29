@@ -2,7 +2,8 @@
   position: relative;
   min-height: 100vh;
   padding: 100px 0 80px;
-  overflow: visible;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .back-btn {

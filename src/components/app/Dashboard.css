@@ -1,4 +1,4 @@
-.dashboard-page { position: relative; min-height: 100vh; padding: 120px 0 80px; overflow: visible; }
+.dashboard-page { position: relative; min-height: 100vh; padding: 120px 0 80px; overflow-x: clip; overflow-y: visible; }
 .dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
 .dashboard-header h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin-bottom: 8px; white-space: nowrap; }
 .dashboard-header > div > p { color: var(--w30); font-size: 0.88rem; }
