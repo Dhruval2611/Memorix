@@ -84,12 +84,12 @@ export default function App() {
 
   // Listen to Firebase Auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         localStorage.setItem('memorix_current_user', firebaseUser.uid);
         setUser(firebaseUser.uid);
-        // Pull cloud data in background — don't block the UI
-        pullFromCloud().catch(console.error);
+        // Pull cloud data and wait for it before showing the UI
+        await pullFromCloud().catch(console.error);
       } else {
         localStorage.removeItem('memorix_current_user');
         setUser(null);

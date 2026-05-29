@@ -38,9 +38,9 @@ export default function Login({ setUser }) {
     try {
       const cred = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
       localStorage.setItem('memorix_current_user', cred.user.uid);
+      // Pull cloud data and wait before navigating
+      await pullFromCloud().catch(console.error);
       setUser(cred.user.uid);
-      // Pull cloud data in background — don't block navigation
-      pullFromCloud().catch(console.error);
       navigate('/dashboard');
     } catch (err) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {

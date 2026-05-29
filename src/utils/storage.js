@@ -66,7 +66,7 @@ export async function pullFromCloud() {
 
   const keys = Object.values(STORAGE_KEYS);
   
-  for (const key of keys) {
+  await Promise.all(keys.map(async (key) => {
     try {
       const docRef = doc(db, 'users', user.uid, 'data', key);
       const snap = await getDoc(docRef);
@@ -82,7 +82,7 @@ export async function pullFromCloud() {
     } catch (err) {
       console.warn(`Cloud pull failed for ${key}:`, err.message);
     }
-  }
+  }));
 }
 
 // Force push all local data to cloud (useful after signup/migration)
