@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Sun, Moon, Monitor, LogOut, User } from 'lucide-react';
 import { auth } from '../../utils/firebase';
-import { signOut } from 'firebase/auth';
+import { signOut, updateProfile } from 'firebase/auth';
 import './Navbar.css';
 
 const navLinks = [
@@ -17,6 +17,11 @@ const navLinks = [
 export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
   const [scrolled, setScrolled] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -26,7 +31,43 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleOpenProfile = () => {
+    try {
+      let defaultName = 'User';
+      if (auth.currentUser) {
+        if (auth.currentUser.displayName) {
+          defaultName = auth.currentUser.displayName;
+        } else if (auth.currentUser.email) {
+          defaultName = auth.currentUser.email.split('@')[0];
+        }
+      }
+      setProfileName(defaultName);
+      setProfileError('');
+      setProfileSuccess('');
+      setShowProfileModal(true);
+    } catch (e) {
+      console.error(e);
+      setProfileError('Failed to load profile.');
+      setShowProfileModal(true);
+    }
+  };
 
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess('');
+    setProfileLoading(true);
+    try {
+      if (profileName && profileName !== auth.currentUser.displayName) {
+        await updateProfile(auth.currentUser, { displayName: profileName });
+      }
+      setProfileSuccess('Profile updated successfully!');
+    } catch (err) {
+      setProfileError(err.message);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   return (
     <>
@@ -70,7 +111,13 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
 
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div className="navbar-user-info" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--w50)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
+                <div 
+                  className="navbar-user-info" 
+                  onClick={handleOpenProfile}
+                  role="button"
+                  tabIndex={0}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--w50)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)', cursor: 'pointer', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
+                >
                   <User size={14} /> <span className="hide-mobile">{auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || 'User'}</span>
                 </div>
                 <button
@@ -137,6 +184,68 @@ export default function Navbar({ theme = 'dark', setTheme, user, setUser }) {
                   Confirm
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Profile Modal */}
+      <AnimatePresence>
+        {showProfileModal && (
+          <motion.div 
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <motion.div
+              className="modal-content"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              style={{ padding: '32px', borderRadius: '16px', border: '1px solid var(--border-subtle)', background: 'var(--bg)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)', maxWidth: '400px', width: '90%' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h3 style={{ margin: 0, color: 'var(--w85)', fontSize: '1.2rem', fontFamily: 'var(--font-heading)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <User size={20} className="accent-color" /> Profile Settings
+                </h3>
+                <button onClick={() => setShowProfileModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--w50)', cursor: 'pointer' }}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              {profileError && <div style={{ background: 'rgba(248, 113, 113, 0.1)', color: 'var(--accent-red)', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.85rem' }}>{profileError}</div>}
+              {profileSuccess && <div style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.85rem' }}>{profileSuccess}</div>}
+
+              <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--w50)' }}>Display Name</label>
+                  <input 
+                    type="text" 
+                    value={profileName} 
+                    onChange={(e) => setProfileName(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', color: 'var(--w85)', fontFamily: 'var(--font-body)' }}
+                    placeholder="Enter your name"
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                  <button 
+                    type="button"
+                    onClick={() => setShowProfileModal(false)}
+                    style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--bg-surface)', color: 'var(--w70)', border: '1px solid var(--border-subtle)', cursor: 'pointer', flex: 1, transition: 'all 0.2s', fontFamily: 'var(--font-body)' }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={profileLoading}
+                    style={{ padding: '10px 20px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none', cursor: profileLoading ? 'not-allowed' : 'pointer', flex: 1, fontWeight: '600', transition: 'all 0.2s', fontFamily: 'var(--font-body)', opacity: profileLoading ? 0.7 : 1 }}
+                  >
+                    {profileLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}
