@@ -45,7 +45,9 @@
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  width: 100%;
+  min-width: 100%;
+  width: max-content;
+  max-width: 350px;
   background: var(--bg-terminal);
   border: var(--border-subtle);
   border-radius: 8px;

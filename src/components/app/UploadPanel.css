@@ -1,4 +1,4 @@
-.upload-page { position: relative; min-height: 100vh; padding: 120px 0 80px; overflow-x: clip; overflow-y: visible; }
+.upload-page { position: relative; min-height: 100vh; padding: 120px 0 80px; overflow: visible; }
 .upload-header { text-align: center; margin-bottom: 40px; }
 .upload-header h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin-bottom: 12px; white-space: nowrap; }
 .upload-header p { color: var(--w30); max-width: 460px; margin: 0 auto; font-size: 0.88rem; }

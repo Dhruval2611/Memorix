@@ -164,7 +164,6 @@ a {
   max-width: var(--container);
   margin: 0 auto;
   padding: 0 clamp(16px, 5vw, 48px);
-  overflow-x: hidden;
 }
 
 /* === Section === */
