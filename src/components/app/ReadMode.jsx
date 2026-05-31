@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Edit2, Check, X, Plus, Trash2, Save, BookOpen, List, Grid, CreditCard, ChevronLeft, ChevronRight, Type, FileText, Search, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Edit2, Check, X, Plus, Trash2, Save, BookOpen, List, Grid, CreditCard, ChevronLeft, ChevronRight, ChevronUp, Type, FileText, Search, MoreHorizontal } from 'lucide-react';
 import Button from '../ui/Button';
 import CustomSelect from '../ui/CustomSelect';
 import { getContentLibrary, updateContentItem, softDeleteContentItem } from '../../utils/storage';
@@ -52,6 +52,54 @@ export default function ReadMode() {
   const [editTerm, setEditTerm] = useState('');
   const [editDef, setEditDef] = useState('');
   const [editType, setEditType] = useState('flashcard');
+
+  // Unsaved changes tracking
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Scroll to Top
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPos = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      setShowScrollTop(scrollPos > 150);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Trigger immediately in case already scrolled
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Block navigation if dirty
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isEditMode && isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    const handleClick = (e) => {
+      if (isEditMode && isDirty) {
+        const link = e.target.closest('a');
+        if (link && link.getAttribute('href')) {
+          if (!window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('click', handleClick, { capture: true });
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('click', handleClick, { capture: true });
+    };
+  }, [isEditMode, isDirty]);
 
   // Bulk Import State
   const [showBulkImport, setShowBulkImport] = useState(false);
@@ -124,6 +172,31 @@ export default function ReadMode() {
       setLibrary(updatedLib);
     }
     setIsEditMode(false);
+    setIsDirty(false);
+  };
+
+  const handleCancelEdit = () => {
+    if (isDirty) {
+      if (!window.confirm('You have unsaved changes. Are you sure you want to cancel?')) return;
+    }
+    setIsEditMode(false);
+    setIsDirty(false);
+    // Restore original content
+    const selected = library.find(c => c.id === contentId);
+    if (selected) {
+      setTitle(selected.title);
+      setItems(selected.items || []);
+    }
+  };
+
+  const handleBack = () => {
+    if (isEditMode && isDirty) {
+      if (!window.confirm('You have unsaved changes. Are you sure you want to go back?')) return;
+    }
+    setContent(null);
+    setContentId('');
+    setIsEditMode(false);
+    setIsDirty(false);
   };
 
   const startEditItem = (item) => {
@@ -142,6 +215,7 @@ export default function ReadMode() {
         : item
     ));
     setEditingItemId(null);
+    setIsDirty(true);
   };
 
   const cancelEditItem = () => {
@@ -151,6 +225,7 @@ export default function ReadMode() {
   const deleteItem = (id) => {
     if (window.confirm('Delete this item?')) {
       setItems(prev => prev.filter(item => item.id !== id));
+      setIsDirty(true);
     }
   };
 
@@ -163,9 +238,10 @@ export default function ReadMode() {
 
   const addNewItem = () => {
     setShowBulkImport(true);
-    setViewMode('list');
+    // Do not change view mode here to respect user's choice
     setTimeout(() => {
-      window.scrollTo({ top: document.body.scrollHeight });
+      const el = document.getElementById('add-new-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
   };
 
@@ -185,6 +261,7 @@ export default function ReadMode() {
         setItems(prev => [...prev, ...parsed]);
         setShowBulkImport(false);
         setBulkText('');
+        setIsDirty(true);
       }
       setBulkProcessing(false);
     }, 800);
@@ -212,6 +289,7 @@ export default function ReadMode() {
         setItems(prev => [...prev, ...parsed]);
         setShowBulkImport(false);
         setBulkText('');
+        setIsDirty(true);
       }
     } catch (err) {
       setBulkError('Failed to process PDF.');
@@ -227,11 +305,7 @@ export default function ReadMode() {
         <div className="read-header-actions">
           {content && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <button className="back-btn" onClick={() => {
-                setContent(null);
-                setContentId('');
-                setIsEditMode(false);
-              }}>
+              <button className="back-btn" onClick={handleBack}>
                 <ArrowLeft size={16} /> Back
               </button>
 
@@ -254,7 +328,7 @@ export default function ReadMode() {
           {content && (
             isEditMode ? (
               <div style={{ display: 'flex', gap: '12px' }}>
-                <Button variant="secondary" onClick={() => setIsEditMode(false)}>
+                <Button variant="secondary" onClick={handleCancelEdit}>
                   Cancel
                 </Button>
                 <Button variant="primary" icon={<Check size={16} />} onClick={handleSaveAll}>
@@ -319,7 +393,10 @@ export default function ReadMode() {
                     <input 
                       type="text" 
                       value={title} 
-                      onChange={e => setTitle(e.target.value)} 
+                      onChange={e => {
+                        setTitle(e.target.value);
+                        setIsDirty(true);
+                      }} 
                       className="title-edit-input"
                       autoFocus
                       onBlur={() => setIsEditingTitle(false)}
@@ -405,6 +482,91 @@ export default function ReadMode() {
                 </div>
               </div>
 
+              {isEditMode && (
+                <div id="add-new-section" style={{ marginBottom: '40px' }}>
+                  {!showBulkImport ? (
+                    <button className="add-item-btn glass" onClick={addNewItem} style={{ marginTop: 0 }}>
+                      <Plus size={20} />
+                      <span>Add New Items</span>
+                    </button>
+                  ) : (
+                    <motion.div 
+                      className="bulk-import-inline glass"
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      style={{ marginTop: 0 }}
+                    >
+                      <div className="upload-tabs" style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
+                        <button
+                          className={`upload-tab ${bulkMode === 'text' ? 'active' : ''}`}
+                          onClick={() => setBulkMode('text')}
+                          style={{ flex: 1, padding: '10px', background: bulkMode === 'text' ? 'var(--accent-dim)' : 'transparent', border: bulkMode === 'text' ? '1px solid var(--accent)' : '1px solid var(--border-subtle)', borderRadius: 'var(--r-sm)', color: 'var(--w85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', boxSizing: 'border-box' }}
+                        >
+                          <Type size={16} /> Text Input
+                        </button>
+                        <button
+                          className={`upload-tab ${bulkMode === 'pdf' ? 'active' : ''}`}
+                          onClick={() => setBulkMode('pdf')}
+                          style={{ flex: 1, padding: '10px', background: bulkMode === 'pdf' ? 'var(--accent-dim)' : 'transparent', border: bulkMode === 'pdf' ? '1px solid var(--accent)' : '1px solid var(--border-subtle)', borderRadius: 'var(--r-sm)', color: 'var(--w85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', boxSizing: 'border-box' }}
+                        >
+                          <FileText size={16} /> PDF Upload
+                        </button>
+                      </div>
+
+                      <div className="upload-workspace" style={{ background: 'var(--bg-hover)', padding: '20px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', boxSizing: 'border-box' }}>
+                        {bulkMode === 'text' && (
+                          <div className="text-input-area">
+                            <textarea
+                              className="content-textarea"
+                              placeholder="Enter your learning content here...&#10;&#10;Supported formats:&#10;• term - definition&#10;• term: definition&#10;• Q: question / A: answer"
+                              value={bulkText}
+                              onChange={(e) => { setBulkText(e.target.value); setIsDirty(true); }}
+                              style={{ width: '100%', minHeight: '160px', background: 'transparent', border: 'none', color: 'var(--w85)', fontSize: '0.95rem', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                        )}
+                        
+                        {bulkMode === 'pdf' && (
+                          <div className="pdf-upload-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '40px 0' }}>
+                            <input
+                              type="file"
+                              accept=".pdf"
+                              onChange={handleBulkPdf}
+                              ref={fileInputRef}
+                              style={{ display: 'none' }}
+                            />
+                            <Button variant="secondary" onClick={() => fileInputRef.current?.click()} disabled={bulkProcessing}>
+                              Choose PDF File
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {bulkError && (
+                        <div className="upload-error" style={{ color: 'var(--red)', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <X size={16} /> {bulkError}
+                        </div>
+                      )}
+
+                      <div className="bulk-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                        <Button variant="secondary" onClick={() => setShowBulkImport(false)}>
+                          Cancel
+                        </Button>
+                        {bulkMode === 'text' && (
+                          <Button 
+                            variant="primary" 
+                            onClick={handleBulkText} 
+                            disabled={bulkProcessing || !bulkText.trim()}
+                          >
+                            {bulkProcessing ? 'Extracting...' : 'Extract & Append'}
+                          </Button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+
               {viewMode === 'card' && filteredItems.length > 0 ? (
                 <div className="card-view-container">
                   <div className="card-navigation">
@@ -454,7 +616,7 @@ export default function ReadMode() {
                             <input 
                               type="text" 
                               value={editTerm} 
-                              onChange={e => setEditTerm(e.target.value)} 
+                              onChange={e => { setEditTerm(e.target.value); setIsDirty(true); }} 
                               className="read-edit-input"
                             />
                           </div>
@@ -462,7 +624,7 @@ export default function ReadMode() {
                             <label>Definition</label>
                             <textarea 
                               value={editDef} 
-                              onChange={e => setEditDef(e.target.value)} 
+                              onChange={e => { setEditDef(e.target.value); setIsDirty(true); }} 
                               className="read-edit-textarea"
                               rows={3}
                             />
@@ -496,89 +658,23 @@ export default function ReadMode() {
                 ))}
               </div>
               )}
-
-              {isEditMode && !showBulkImport && (
-                <button className="add-item-btn glass" onClick={addNewItem}>
-                  <Plus size={20} />
-                  <span>Add New Items</span>
-                </button>
-              )}
-
-              {isEditMode && showBulkImport && (
-                <motion.div 
-                  className="bulk-import-inline glass"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className="upload-tabs" style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
-                    <button
-                      className={`upload-tab ${bulkMode === 'text' ? 'active' : ''}`}
-                      onClick={() => setBulkMode('text')}
-                      style={{ flex: 1, padding: '10px', background: bulkMode === 'text' ? 'var(--accent-dim)' : 'transparent', border: bulkMode === 'text' ? '1px solid var(--accent)' : '1px solid var(--border-subtle)', borderRadius: 'var(--r-sm)', color: 'var(--w85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', boxSizing: 'border-box' }}
-                    >
-                      <Type size={16} /> Text Input
-                    </button>
-                    <button
-                      className={`upload-tab ${bulkMode === 'pdf' ? 'active' : ''}`}
-                      onClick={() => setBulkMode('pdf')}
-                      style={{ flex: 1, padding: '10px', background: bulkMode === 'pdf' ? 'var(--accent-dim)' : 'transparent', border: bulkMode === 'pdf' ? '1px solid var(--accent)' : '1px solid var(--border-subtle)', borderRadius: 'var(--r-sm)', color: 'var(--w85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', boxSizing: 'border-box' }}
-                    >
-                      <FileText size={16} /> PDF Upload
-                    </button>
-                  </div>
-
-                  <div className="upload-workspace" style={{ background: 'var(--bg-hover)', padding: '20px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', boxSizing: 'border-box' }}>
-                    {bulkMode === 'text' && (
-                      <div className="text-input-area">
-                        <textarea
-                          className="content-textarea"
-                          placeholder="Enter your learning content here...&#10;&#10;Supported formats:&#10;• term - definition&#10;• term: definition&#10;• Q: question / A: answer"
-                          value={bulkText}
-                          onChange={(e) => setBulkText(e.target.value)}
-                          style={{ width: '100%', minHeight: '160px', background: 'transparent', border: 'none', color: 'var(--w85)', fontSize: '0.95rem', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
-                        />
-                      </div>
-                    )}
-                    
-                    {bulkMode === 'pdf' && (
-                      <div className="pdf-upload-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '40px 0' }}>
-                        <input
-                          type="file"
-                          accept=".pdf"
-                          onChange={handleBulkPdf}
-                          ref={fileInputRef}
-                          style={{ display: 'none' }}
-                        />
-                        <Button variant="secondary" onClick={() => fileInputRef.current?.click()} disabled={bulkProcessing}>
-                          Choose PDF File
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  {bulkError && (
-                    <div className="upload-error" style={{ color: 'var(--red)', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <X size={16} /> {bulkError}
-                    </div>
-                  )}
-
-                  <div className="bulk-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                    <Button variant="secondary" onClick={() => setShowBulkImport(false)}>
-                      Cancel
-                    </Button>
-                    {bulkMode === 'text' && (
-                      <Button 
-                        variant="primary" 
-                        onClick={handleBulkText} 
-                        disabled={bulkProcessing || !bulkText.trim()}
-                      >
-                        {bulkProcessing ? 'Extracting...' : 'Extract & Append'}
-                      </Button>
-                    )}
-                  </div>
-                </motion.div>
-              )}
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showScrollTop && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              className="scroll-to-top-btn"
+              onClick={scrollToTop}
+              title="Scroll to top"
+              style={{ zIndex: 9999 }}
+            >
+              <ChevronUp size={24} />
+            </motion.button>
           )}
         </AnimatePresence>
       </div>
