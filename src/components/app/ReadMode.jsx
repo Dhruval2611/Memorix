@@ -477,7 +477,7 @@ export default function ReadMode() {
 
                 <div className="view-mode-toggle glass" style={{ margin: 0 }}>
                   <button className={`toggle-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} title="List View"><List size={18} /></button>
-                  <button className={`toggle-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} title="Grid View"><Grid size={18} /></button>
+                  <button className={`toggle-btn hide-mobile ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} title="Grid View"><Grid size={18} /></button>
                   <button className={`toggle-btn ${viewMode === 'card' ? 'active' : ''}`} onClick={() => { setViewMode('card'); setCurrentCardIndex(0); }} title="Card View"><CreditCard size={18} /></button>
                 </div>
               </div>
@@ -585,14 +585,28 @@ export default function ReadMode() {
                     ><ChevronRight size={24} /></button>
                   </div>
                   
-                  <div className="flashcard glass">
-                    <div className="flashcard-inner-static">
+                  <motion.div 
+                    className="flashcard glass"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={(e, { offset }) => {
+                      const swipeThreshold = 50;
+                      if (offset.x < -swipeThreshold) {
+                        setCurrentCardIndex(prev => Math.min(filteredItems.length - 1, prev + 1));
+                      } else if (offset.x > swipeThreshold) {
+                        setCurrentCardIndex(prev => Math.max(0, prev - 1));
+                      }
+                    }}
+                    style={{ touchAction: 'pan-y' }}
+                  >
+                    <div className="flashcard-inner-static" style={{ pointerEvents: 'none' }}>
                       <div className="card-type-badge">{filteredItems[currentCardIndex].type}</div>
                       <h3>{smartWrap(filteredItems[currentCardIndex].term)}</h3>
                       <div className="card-divider"></div>
                       <p>{smartWrap(filteredItems[currentCardIndex].definition)}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               ) : (
                 <div className={`read-items-list mode-${viewMode}`}>
