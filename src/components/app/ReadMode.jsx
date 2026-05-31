@@ -625,13 +625,13 @@ export default function ReadMode() {
                         initial="enter"
                         animate="center"
                         exit="exit"
-                        transition={{ type: "spring", stiffness: 600, damping: 35 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
                         className="flashcard glass"
                         drag="x"
                         dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={0.5}
+                        dragElastic={0.2}
                         onDragEnd={(e, { offset }) => {
-                          const swipeThreshold = 30;
+                          const swipeThreshold = 20;
                           if (offset.x < -swipeThreshold) {
                             if (currentCardIndex < filteredItems.length - 1) {
                               setSwipeDirection(1);
