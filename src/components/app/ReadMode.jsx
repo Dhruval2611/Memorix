@@ -112,6 +112,25 @@ export default function ReadMode() {
   // Layout State
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid' | 'card'
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState(0);
+
+  const cardVariants = {
+    enter: (direction) => ({
+      x: direction > 0 ? 200 : -200,
+      opacity: 0,
+      scale: 0.95
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1
+    },
+    exit: (direction) => ({
+      x: direction < 0 ? 200 : -200,
+      opacity: 0,
+      scale: 0.95
+    })
+  };
 
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,9 +158,15 @@ export default function ReadMode() {
     if (viewMode !== 'card') return;
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft') {
-        setCurrentCardIndex(prev => Math.max(0, prev - 1));
+        if (currentCardIndex > 0) {
+          setSwipeDirection(-1);
+          setCurrentCardIndex(prev => prev - 1);
+        }
       } else if (e.key === 'ArrowRight') {
-        setCurrentCardIndex(prev => Math.min(filteredItems.length - 1, prev + 1));
+        if (currentCardIndex < filteredItems.length - 1) {
+          setSwipeDirection(1);
+          setCurrentCardIndex(prev => prev + 1);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -571,7 +596,10 @@ export default function ReadMode() {
                 <div className="card-view-container">
                   <div className="card-navigation">
                     <button 
-                      onClick={() => setCurrentCardIndex(Math.max(0, currentCardIndex - 1))}
+                      onClick={() => {
+                        setSwipeDirection(-1);
+                        setCurrentCardIndex(Math.max(0, currentCardIndex - 1));
+                      }}
                       disabled={currentCardIndex === 0}
                       className="nav-btn"
                     ><ChevronLeft size={24} /></button>
@@ -579,34 +607,54 @@ export default function ReadMode() {
                     <span className="card-counter">{currentCardIndex + 1} / {filteredItems.length}</span>
                     
                     <button 
-                      onClick={() => setCurrentCardIndex(Math.min(filteredItems.length - 1, currentCardIndex + 1))}
+                      onClick={() => {
+                        setSwipeDirection(1);
+                        setCurrentCardIndex(Math.min(filteredItems.length - 1, currentCardIndex + 1));
+                      }}
                       disabled={currentCardIndex === filteredItems.length - 1}
                       className="nav-btn"
                     ><ChevronRight size={24} /></button>
                   </div>
                   
-                  <motion.div 
-                    className="flashcard glass"
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.2}
-                    onDragEnd={(e, { offset }) => {
-                      const swipeThreshold = 50;
-                      if (offset.x < -swipeThreshold) {
-                        setCurrentCardIndex(prev => Math.min(filteredItems.length - 1, prev + 1));
-                      } else if (offset.x > swipeThreshold) {
-                        setCurrentCardIndex(prev => Math.max(0, prev - 1));
-                      }
-                    }}
-                    style={{ touchAction: 'pan-y' }}
-                  >
-                    <div className="flashcard-inner-static" style={{ pointerEvents: 'none' }}>
-                      <div className="card-type-badge">{filteredItems[currentCardIndex].type}</div>
-                      <h3>{smartWrap(filteredItems[currentCardIndex].term)}</h3>
-                      <div className="card-divider"></div>
-                      <p>{smartWrap(filteredItems[currentCardIndex].definition)}</p>
-                    </div>
-                  </motion.div>
+                  <div style={{ position: 'relative', width: '100%', maxWidth: '600px', margin: '0 auto', minHeight: '300px' }}>
+                    <AnimatePresence mode="wait" custom={swipeDirection}>
+                      <motion.div 
+                        key={currentCardIndex}
+                        custom={swipeDirection}
+                        variants={cardVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        className="flashcard glass"
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.8}
+                        onDragEnd={(e, { offset }) => {
+                          const swipeThreshold = 50;
+                          if (offset.x < -swipeThreshold) {
+                            if (currentCardIndex < filteredItems.length - 1) {
+                              setSwipeDirection(1);
+                              setCurrentCardIndex(prev => prev + 1);
+                            }
+                          } else if (offset.x > swipeThreshold) {
+                            if (currentCardIndex > 0) {
+                              setSwipeDirection(-1);
+                              setCurrentCardIndex(prev => prev - 1);
+                            }
+                          }
+                        }}
+                        style={{ touchAction: 'pan-y', position: 'absolute', top: 0, left: 0, right: 0 }}
+                      >
+                        <div className="flashcard-inner-static" style={{ pointerEvents: 'none' }}>
+                          <div className="card-type-badge">{filteredItems[currentCardIndex].type}</div>
+                          <h3>{smartWrap(filteredItems[currentCardIndex].term)}</h3>
+                          <div className="card-divider"></div>
+                          <p>{smartWrap(filteredItems[currentCardIndex].definition)}</p>
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
                 </div>
               ) : (
                 <div className={`read-items-list mode-${viewMode}`}>
